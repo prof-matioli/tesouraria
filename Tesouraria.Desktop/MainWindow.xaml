@@ -6,6 +6,7 @@
        xmlns:local="clr-namespace:Tesouraria.Desktop"
        mc:Ignorable="d"
        Title="Sistema de Tesouraria - Paróquia" Height="600" Width="900"
+       WindowState="Maximized"
        WindowStartupLocation="CenterScreen" Background="#F0F2F5">
 
    <Grid>
@@ -29,16 +30,19 @@
                        Background="Transparent" Foreground="White" BorderThickness="0" 
                        HorizontalContentAlignment="Left" Padding="15,0" Click="BtnAbrirFornecedores_Click"/>
 
-               <Button Content="Centros de Custo" Height="40" Margin="0,0,0,5" 
+                <Button Content="Centros de Custo" Height="40" Margin="0,0,0,5" 
                        Background="Transparent" Foreground="White" BorderThickness="0" 
-                       HorizontalContentAlignment="Left" Padding="15,0"/>
+                       HorizontalContentAlignment="Left" Padding="15,0" Click="BtnAbrirCentroCusto_Click"/>
 
+                <Button Content="Plano de Contas" Height="40" Margin="0,0,0,5" 
+                       Background="Transparent" Foreground="White" BorderThickness="0" 
+                       HorizontalContentAlignment="Left" Padding="15,0" Click="BtnAbrirPlanoContas_Click"/>
+                
                <TextBlock Text="FINANCEIRO" Foreground="#A0A0A0" FontSize="12" Margin="10,20,0,5"/>
-
-               <Button Content="Lançamentos" Height="40" Margin="0,0,0,5" 
+                <Button Content="Lançamentos" Height="40" Margin="0,0,0,5" 
                        Background="Transparent" Foreground="White" BorderThickness="0" 
-                       HorizontalContentAlignment="Left" Padding="15,0"/>
-           </StackPanel>
+                       HorizontalContentAlignment="Left" Padding="15,0" Click="BtnAbrirTesouraria_Click"/>
+            </StackPanel>
        </Border>
    </Grid>
 </Window>

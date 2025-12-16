@@ -13,10 +13,9 @@ using Tesouraria.Infrastructure.Data;
 using Tesouraria.Desktop.Views.Cadastros;
 using Tesouraria.Infra.Data.Repositories;
 using Tesouraria.Infrastructure.Repositories;
-using Tesouraria.Domain.Services;
-using Tesouraria.Desktop.Views;
 using Tesouraria.Application.DTOs;
 using Tesouraria.Domain.Entities;
+using Tesouraria.Desktop.ViewModels;
 
 namespace Tesouraria.Desktop
 {
@@ -66,50 +65,112 @@ namespace Tesouraria.Desktop
                     services.AddTransient<FornecedorService>();
                     services.AddScoped<IFornecedorRepository, FornecedorRepository>();
                     services.AddTransient<CadastroFornecedor>();
+
+                    services.AddScoped<ICentroCustoRepository, CentroCustoRepository>();
+                    services.AddScoped<IBaseService<CentroCusto, CentroCustoDTO>, CentroCustoService>();
+                    services.AddTransient<CentroCustoWindow>();
+
+                    services.AddScoped<ICategoriaFinanceiraRepository, CategoriaFinanceiraRepository>();
+                    services.AddScoped<IBaseService<CategoriaFinanceira, CategoriaFinanceiraDTO>, CategoriaFinanceiraService>();
+                    services.AddTransient<CategoriaWindow>();
+
+                    services.AddScoped<ILancamentoRepository, LancamentoRepository>();
+                    services.AddScoped<ILancamentoService, LancamentoService>();
+
+                    // --- FASE 4: REGISTROS FINANCEIROS ---
+
+                    // 1. Repositórios
+                    services.AddScoped<ILancamentoRepository, LancamentoRepository>();
+                    services.AddScoped<IRepository<CentroCusto>, Repository<CentroCusto>>();
+                    services.AddScoped<IRepository<CategoriaFinanceira>, Repository<CategoriaFinanceira>>();
+                    services.AddScoped<IRepository<Fiel>, Repository<Fiel>>();
+                    services.AddScoped<IRepository<Fornecedor>, Repository<Fornecedor>>();
+
+                    // 2. Serviços
+                    services.AddScoped<ILancamentoService, LancamentoService>();
+
+                    // 3. ViewModels
+                    services.AddTransient<LancamentoListaViewModel>();
+                    services.AddTransient<LancamentoCadastroViewModel>();
+
+                    // 4. Views (Janelas)
+                    services.AddTransient<LancamentoListaView>();
+                    services.AddTransient<LancamentoCadastroView>();
                 })
                 .Build();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            // Inicia o Host (DI)
             await Host.StartAsync();
 
             // --- INÍCIO DA SEED AUTOMÁTICA ---
             using (var scope = Host.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                // Garante que o banco existe
-                // context.Database.EnsureCreated(); // Opcional se usa Migrations
 
-                // Se não houver nenhum usuário, cria o Admin
+                // Garante que o banco está atualizado com as últimas Migrations
+                // context.Database.Migrate(); 
+
+                // 1. Seed de Usuário (Mantido do seu código original)
                 if (!context.Usuarios.Any())
                 {
                     context.Usuarios.Add(new Tesouraria.Domain.Entities.Usuario
                     {
                         Nome = "Administrador",
                         Email = "admin@paroquia.com",
-                        SenhaHash = BCrypt.Net.BCrypt.HashPassword("123456"),
-                        Perfil = Domain.Enums.PerfilUsuario.Administrador,
+                        SenhaHash = BCrypt.Net.BCrypt.HashPassword("admin"),
+                        Perfil = Tesouraria.Domain.Enums.PerfilUsuario.Administrador,
                         Ativo = true,
                         DataCriacao = DateTime.Now
                     });
-                    context.SaveChanges();
+                    await context.SaveChangesAsync();
+                }
+
+                // 2. Seed Básico Financeiro (NOVO - Para testar a Fase 4)
+                // Precisamos disso para preencher os Combos na tela de cadastro
+                if (!context.CentrosCusto.Any())
+                {
+                    context.CentrosCusto.AddRange(
+                        new Tesouraria.Domain.Entities.CentroCusto { Nome = "Geral", Descricao = "Custos gerais da paróquia" },
+                        new Tesouraria.Domain.Entities.CentroCusto { Nome = "Festas", Descricao = "Eventos festivos" },
+                        new Tesouraria.Domain.Entities.CentroCusto { Nome = "Liturgia", Descricao = "Custos com missas e celebrações" }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                if (!context.CategoriasFinanceiras.Any())
+                {
+                    context.CategoriasFinanceiras.AddRange(
+                        // Receitas
+                        new Tesouraria.Domain.Entities.CategoriaFinanceira { Nome = "Dízimo", Tipo = Tesouraria.Domain.Entities.TipoTransacao.Receita, DedutivelIR = true },
+                        new Tesouraria.Domain.Entities.CategoriaFinanceira { Nome = "Oferta", Tipo = Tesouraria.Domain.Entities.TipoTransacao.Receita, DedutivelIR = false },
+                        // Despesas
+                        new Tesouraria.Domain.Entities.CategoriaFinanceira { Nome = "Energia Elétrica", Tipo = Tesouraria.Domain.Entities.TipoTransacao.Despesa },
+                        new Tesouraria.Domain.Entities.CategoriaFinanceira { Nome = "Manutenção Predial", Tipo = Tesouraria.Domain.Entities.TipoTransacao.Despesa }
+                    );
+                    await context.SaveChangesAsync();
                 }
             }
             // --- FIM DA SEED AUTOMÁTICA ---
+
             try
             {
-                // CORREÇÃO: Chamamos a LoginWindow primeiro
+                //Comentado para uso futuro:
                 var loginWindow = Host.Services.GetRequiredService<LoginWindow>();
                 loginWindow.Show();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro fatal ao iniciar: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Opcional: Shutdown se falhar
+                Current.Shutdown();
             }
 
             base.OnStartup(e);
         }
+        
 
         protected override async void OnExit(ExitEventArgs e)
         {

@@ -11,6 +11,7 @@ namespace Tesouraria.Infrastructure.Data
         public DbSet<Fornecedor> Fornecedores { get; set; }
         public DbSet<CentroCusto> CentrosCusto { get; set; }
         public DbSet<CategoriaFinanceira> CategoriasFinanceiras { get; set; }
+        public DbSet<Lancamento> Lancamento { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

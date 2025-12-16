@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using Tesouraria.Application.Services;
+
 
 // -------------------------------------------------------------
 // IMPORTS CRUCIAIS: Define onde estão suas classes de negócio
 // -------------------------------------------------------------
 using Tesouraria.Domain.Entities;
-using Tesouraria.Domain.Services;
-using Tesouraria.Infra.Data.Repositories;
-using Tesouraria.Infrastructure.Data;
 
 namespace Tesouraria.Desktop.Views.Cadastros
 {

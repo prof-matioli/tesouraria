@@ -79,7 +79,7 @@ Essa fase se encerra com a execução correta do projeto principal, mesmo que co
 Configuração do repositório GIT, local e remoto, e push da fase 1.
 Fase 2: Desenvolvimento do sistema de autenticação e autorização
 Essa fase se encerra com o funcionamento correto do sistema de autenticação e autorização.
-Fase 3: Desenvolvimento de todas de todos os CRUDs completos, com as classes bases, interfaces, DTOs, serviços, repositórios, etc. 
+Fase 3: Desenvolvimento de todos os CRUDs completos, com as classes bases, interfaces, DTOs, serviços, repositórios, etc. 
 Fase 4: Desenvolvimento das operações financeiras, como lançamentos de contas a pagar e receber, relatórios de fluxo de caixa, etc.
 Fase 5: Geração do instalador da aplicação para deploy.
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using System.Windows.Input;
 using Tesouraria.Application.DTOs;
 using Tesouraria.Application.Interfaces;
 // Certifique-se que o namespace abaixo existe (onde está seu AuthService)
@@ -17,10 +18,20 @@ namespace Tesouraria.Desktop
             InitializeComponent();
             _authService = authService;
 
+            // Valores padrão para facilitar testes (remova em produção)
+            TxtEmail.Text = "admin@paroquia.com";
+            TxtSenha.Password = "123456";
+
             // Focar no campo de e-mail ao abrir
             TxtEmail.Focus();
         }
 
+        // PERMITE ARRASTAR A JANELA
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
         private async void BtnEntrar_Click(object sender, RoutedEventArgs e)
         {
             string email = TxtEmail.Text.Trim();

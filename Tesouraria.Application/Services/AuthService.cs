@@ -27,11 +27,9 @@ namespace Tesouraria.Application.Services
 
             // O filtro acontece no banco de dados (SQL WHERE Email = ...), retornando apenas 1 registro.
             var usuario = await _usuarioRepository.ObterPorEmailAsync(email);
-
+            var senhhsh = BCrypt.Net.BCrypt.HashPassword(senha);
             if (usuario == null) return null;
-
             if (!BCrypt.Net.BCrypt.Verify(senha, usuario.SenhaHash)) return null;
-
             return _mapper.Map<UsuarioDTO>(usuario);
         }
     }

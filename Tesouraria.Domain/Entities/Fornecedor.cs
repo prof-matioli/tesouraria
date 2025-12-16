@@ -1,14 +1,18 @@
-﻿namespace Tesouraria.Domain.Entities
-{
-    public class Fornecedor
-    {
-        public int Id { get; set; }
+﻿using Tesouraria.Domain.Common; // Importante
 
-        public string RazaoSocial { get; set; }  // Nome oficial
-        public string NomeFantasia { get; set; } // Nome comercial
-        public string CNPJ { get; set; }
-        public string Email { get; set; }
-        public string Telefone { get; set; }
+namespace Tesouraria.Domain.Entities
+{
+    // ALTERAÇÃO: Adicionado herança de BaseEntity
+    public class Fornecedor : BaseEntity
+    {
+        // REMOVA a propriedade Id, pois ela já existe na BaseEntity
+        // public int Id { get; set; } <--- APAGAR ISSO
+
+        public string RazaoSocial { get; set; } = string.Empty;
+        public string NomeFantasia { get; set; } = string.Empty;
+        public string CNPJ { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Telefone { get; set; } = string.Empty;
 
         public bool Ativo { get; set; } = true;
 
@@ -19,6 +23,7 @@
             RazaoSocial = razaoSocial;
             CNPJ = cnpj;
             Email = email;
+            DataCriacao = DateTime.Now; // Garantir data de criação
         }
     }
 }

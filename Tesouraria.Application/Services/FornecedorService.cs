@@ -1,4 +1,4 @@
-﻿namespace Tesouraria.Domain.Services
+﻿namespace Tesouraria.Application.Services
 {
     using Tesouraria.Domain.Entities;
     using Tesouraria.Domain.Interfaces;

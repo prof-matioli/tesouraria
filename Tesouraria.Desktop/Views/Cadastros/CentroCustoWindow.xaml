@@ -1,0 +1,51 @@
+﻿<Window x:Class="Tesouraria.Desktop.Views.Cadastros.CentroCustoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Centros de Custo" Height="500" Width="600"
+        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox Header="Detalhes" Grid.Row="0" Margin="0,0,0,10">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="ID:" Grid.Row="0" VerticalAlignment="Center" Margin="0,0,10,5"/>
+                <TextBox x:Name="txtId" Grid.Row="0" Grid.Column="1" IsReadOnly="True" Background="#F0F0F0" Margin="0,0,0,5" Width="60" HorizontalAlignment="Left"/>
+
+                <TextBlock Text="Nome:" Grid.Row="1" VerticalAlignment="Center" Margin="0,0,10,5"/>
+                <TextBox x:Name="txtNome" Grid.Row="1" Grid.Column="1" Margin="0,0,0,5"/>
+
+                <TextBlock Text="Descrição:" Grid.Row="2" VerticalAlignment="Center" Margin="0,0,10,5"/>
+                <TextBox x:Name="txtDescricao" Grid.Row="2" Grid.Column="1" Margin="0,0,0,5" Height="50" TextWrapping="Wrap" AcceptsReturn="True"/>
+            </Grid>
+        </GroupBox>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+            <Button x:Name="btnLimpar" Content="Novo / Limpar" Width="100" Click="BtnLimpar_Click" Margin="0,0,10,0"/>
+            <Button x:Name="btnExcluir" Content="Excluir" Width="80" Background="#FFCDD2" Click="BtnExcluir_Click" Margin="0,0,10,0"/>
+            <Button x:Name="btnSalvar" Content="Salvar" Width="80" FontWeight="Bold" Click="BtnSalvar_Click"/>
+        </StackPanel>
+
+        <DataGrid x:Name="DgDados" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="DgDados_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="150"/>
+                <DataGridTextColumn Header="Descrição" Binding="{Binding Descricao}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>
