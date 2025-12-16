@@ -1,0 +1,61 @@
+﻿<Window x:Class="Tesouraria.Desktop.Views.Cadastros.CadastroFielWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Gestão de Fiéis" Height="600" Width="800"
+        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox Header="Dados do Fiel" Grid.Row="0" Margin="0,0,0,10">
+            <Grid Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="ID:" VerticalAlignment="Center" Margin="0,0,5,5"/>
+                <TextBox x:Name="txtId" Grid.Column="1" IsReadOnly="True" Background="#F0F0F0" Margin="0,0,0,5"/>
+
+                <TextBlock Text="Nome:" Grid.Row="0" Grid.Column="3" VerticalAlignment="Center" Margin="0,0,5,5"/>
+                <TextBox x:Name="txtNome" Grid.Row="0" Grid.Column="4" Margin="0,0,0,5"/>
+
+                <TextBlock Text="CPF:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,5,5"/>
+                <TextBox x:Name="txtCPF" Grid.Row="1" Grid.Column="1" Margin="0,0,0,5"/>
+
+                <TextBlock Text="Data Nasc.:" Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Margin="0,0,5,5"/>
+                <DatePicker x:Name="dtpNascimento" Grid.Row="1" Grid.Column="4" Margin="0,0,0,5"/>
+            </Grid>
+        </GroupBox>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+            <Button x:Name="btnLimpar" Content="Novo / Limpar" Width="100" Margin="0,0,10,0" Click="BtnLimpar_Click"/>
+            <Button x:Name="btnExcluir" Content="Excluir" Width="80" Background="#FFCDD2" Margin="0,0,10,0" Click="BtnExcluir_Click"/>
+            <Button x:Name="btnSalvar" Content="Salvar" Width="80" FontWeight="Bold" Click="BtnSalvar_Click"/>
+        </StackPanel>
+
+        <DataGrid x:Name="DgDados" Grid.Row="2" 
+                  AutoGenerateColumns="False" 
+                  IsReadOnly="True" 
+                  SelectionMode="Single"
+                  SelectionChanged="DgDados_SelectionChanged">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*"/>
+                <DataGridTextColumn Header="CPF" Binding="{Binding CPF}" Width="120"/>
+                <DataGridTextColumn Header="Data Nasc." Binding="{Binding DataNascimento, StringFormat=dd/MM/yyyy}" Width="100"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>

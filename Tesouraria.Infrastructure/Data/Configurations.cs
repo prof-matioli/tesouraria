@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Tesouraria.Domain.Entities;
-using Tesouraria.Domain.Enums;
 
 namespace Tesouraria.Infrastructure.Data.Configurations
 {

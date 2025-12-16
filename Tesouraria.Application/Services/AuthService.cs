@@ -1,4 +1,6 @@
-﻿using Tesouraria.Application.Interfaces;
+﻿using AutoMapper;
+using Tesouraria.Application.DTOs;
+using Tesouraria.Application.Interfaces;
 using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Interfaces;
 
@@ -6,36 +8,31 @@ namespace Tesouraria.Application.Services
 {
     public class AuthService : IAuthService
     {
+        // Campos privados e readonly para garantir que não sejam alterados após o construtor
         private readonly IUsuarioRepository _usuarioRepository;
+        private readonly IMapper _mapper;
 
         // Injeção de Dependência via Construtor
         // Recebemos a INTERFACE do repositório, não a implementação concreta.
-        public AuthService(IUsuarioRepository usuarioRepository)
+        public AuthService(IUsuarioRepository usuarioRepository, IMapper mapper)
         {
-            _usuarioRepository = usuarioRepository;
+            // Boa prática: "Fail Fast". Se a injeção falhar, o erro estoura aqui e não no método LoginAsync.
+            _usuarioRepository = usuarioRepository ?? throw new ArgumentNullException(nameof(usuarioRepository));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<Usuario?> LoginAsync(string email, string senha)
+        public async Task<UsuarioDTO?> LoginAsync(string email, string senha)
         {
-            // 1. Busca o usuário no banco de dados pelo e-mail
+            if (string.IsNullOrWhiteSpace(email)) return null;
+
+            // O filtro acontece no banco de dados (SQL WHERE Email = ...), retornando apenas 1 registro.
             var usuario = await _usuarioRepository.ObterPorEmailAsync(email);
 
-            // 2. Validações iniciais (se não existe ou está inativo, retorna null)
-            if (usuario == null || !usuario.Ativo)
-            {
-                return null;
-            }
+            if (usuario == null) return null;
 
-            // 3. Verifica a senha
-            // O BCrypt compara a senha digitada (texto puro) com o Hash salvo no banco
-            bool senhaValida = BCrypt.Net.BCrypt.Verify(senha, usuario.SenhaHash);
+            if (!BCrypt.Net.BCrypt.Verify(senha, usuario.SenhaHash)) return null;
 
-            if (senhaValida)
-            {
-                return usuario; // Autenticação bem-sucedida
-            }
-
-            return null; // Senha incorreta
+            return _mapper.Map<UsuarioDTO>(usuario);
         }
     }
 }

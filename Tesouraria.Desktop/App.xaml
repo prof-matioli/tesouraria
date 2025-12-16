@@ -3,6 +3,51 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Tesouraria.Desktop">
     <Application.Resources>
-         
+        <SolidColorBrush x:Key="PrimaryColor" Color="#0078D7"/>
+        <SolidColorBrush x:Key="SuccessColor" Color="#107C10"/>
+        <SolidColorBrush x:Key="DangerColor" Color="#D13438"/>
+        <SolidColorBrush x:Key="GrayColor" Color="#E1E1E1"/>
+
+        <Style TargetType="Label">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="5,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <Style TargetType="Button" x:Key="BaseButtonStyle">
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="Margin" Value="5,0"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" x:Key="BtnSalvar" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource SuccessColor}"/>
+        </Style>
+
+        <Style TargetType="Button" x:Key="BtnExcluir" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource DangerColor}"/>
+        </Style>
+
+        <Style TargetType="Button" x:Key="BtnCancelar" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Background" Value="Gray"/>
+        </Style>
     </Application.Resources>
 </Application>

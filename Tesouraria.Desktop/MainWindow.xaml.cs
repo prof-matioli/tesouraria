@@ -1,50 +1,47 @@
-﻿using System.Windows;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Windows;
+using Tesouraria.Application.DTOs;
 using Tesouraria.Application.Interfaces;
+using Tesouraria.Desktop.Views;
+using Tesouraria.Desktop.Views.Cadastros;
+using Tesouraria.Domain.Entities;
 
 namespace Tesouraria.Desktop
 {
-    public partial class LoginWindow : Window
+    public partial class MainWindow : Window
     {
-        private readonly IAuthService _authService;
-        private readonly MainWindow _mainWindow;
+        // Serviço injetado para manipular Fieis
+        private readonly IBaseService<Fiel, FielDTO> _fielService;
 
-        // Injetamos o AuthService e a MainWindow (que será aberta se logar com sucesso)
-        public LoginWindow(IAuthService authService, MainWindow mainWindow)
+        // Construtor com Injeção de Dependência
+        public MainWindow(IBaseService<Fiel, FielDTO> fielService)
         {
             InitializeComponent();
-            _authService = authService;
-            _mainWindow = mainWindow;
         }
 
-        private async void BtnLogin_Click(object sender, RoutedEventArgs e)
+        // Botão para abrir a Gestão de Fieis
+        private void BtnAbrirFieis_Click(object sender, RoutedEventArgs e)
         {
-            txtErro.Text = "Verificando...";
-            btnLogin.IsEnabled = false;
+            if (System.Windows.Application.Current is App app)
+            {
+                // O container resolve a nova janela e injeta o Service nela automaticamente
+                var janelaGestao = app.Host.Services.GetRequiredService<CadastroFielWindow>();
+                janelaGestao.ShowDialog();
+            }
+        }
 
-            try
-            {
-                var usuario = await _authService.LoginAsync(txtEmail.Text, txtSenha.Password);
+        private void BtnAbrirFornecedores_Click(object sender, RoutedEventArgs e)
+        {
+            // Forma correta de abrir janelas com DI no WPF sem frameworks complexos:
 
-                if (usuario != null)
-                {
-                    // Login Sucesso
-                    _mainWindow.Show();
-                    this.Close();
-                }
-                else
-                {
-                    txtErro.Text = "E-mail ou senha inválidos.";
-                }
-            }
-            catch (Exception ex)
-            {
-                txtErro.Text = "Erro ao tentar logar.";
-                // Logar o erro real aqui com Serilog futuramente
-            }
-            finally
-            {
-                btnLogin.IsEnabled = true;
-            }
+            // 1. Pega a instância atual da aplicação
+            var app = (App)System.Windows.Application.Current;
+
+            // 2. Pede ao container a janela pronta
+            var janela = app.Host.Services.GetRequiredService<CadastroFornecedor>();
+
+            // 3. Abre
+            janela.ShowDialog();
         }
     }
 }

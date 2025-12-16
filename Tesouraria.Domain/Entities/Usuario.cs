@@ -1,17 +1,18 @@
 ﻿using Tesouraria.Domain.Enums;
+using Tesouraria.Domain.Common; 
 
 namespace Tesouraria.Domain.Entities
 {
-    public class Usuario : Entity
+    public class Usuario : BaseEntity
     {
-        public string Nome { get; private set; } = string.Empty;
-        public string Email { get; private set; } = string.Empty;
-        public string SenhaHash { get; private set; } = string.Empty; // Nunca salvamos a senha real
-        public PerfilUsuario Perfil { get; private set; }
-        public bool Ativo { get; private set; }
+        public string Nome { get;  set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string SenhaHash { get; set; } = string.Empty; // Nunca salvamos a senha real
+        public PerfilUsuario Perfil { get; set; }
+        public bool Ativo { get; set; }
 
         // Construtor vazio para o EF Core
-        protected Usuario() { }
+        public Usuario() { }
 
         public Usuario(string nome, string email, string senhaHash, PerfilUsuario perfil)
         {

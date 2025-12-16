@@ -7,6 +7,10 @@ namespace Tesouraria.Infrastructure.Data
     public class AppDbContext : DbContext
     {
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Fiel> Fieis { get; set; }
+        public DbSet<Fornecedor> Fornecedores { get; set; }
+        public DbSet<CentroCusto> CentrosCusto { get; set; }
+        public DbSet<CategoriaFinanceira> CategoriasFinanceiras { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

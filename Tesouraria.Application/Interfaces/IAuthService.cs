@@ -1,9 +1,10 @@
-﻿using Tesouraria.Domain.Entities;
+﻿using Tesouraria.Application.DTOs;
+using Tesouraria.Domain.Entities;
 
 namespace Tesouraria.Application.Interfaces
 {
     public interface IAuthService
     {
-        Task<Usuario?> LoginAsync(string email, string senha);
+        Task<UsuarioDTO?> LoginAsync(string email, string senha);
     }
 }
