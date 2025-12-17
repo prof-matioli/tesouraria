@@ -23,6 +23,14 @@ namespace Tesouraria.Application.Services
             _categoriaRepository = categoriaRepository;
         }
 
+        public async Task<decimal> ObterSaldoPrevistoAsync(DateTime inicio, DateTime fim)
+        {
+            var receitas = await _lancamentoRepository.ObterTotalPrevistoAsync(inicio, fim, TipoTransacao.Receita);
+            var despesas = await _lancamentoRepository.ObterTotalPrevistoAsync(inicio, fim, TipoTransacao.Despesa);
+
+            return receitas - despesas;
+        }
+
         public async Task<IEnumerable<LancamentoDto>> ObterTodosAsync(DateTime inicio, DateTime fim)
         {
             var lancamentos = await _lancamentoRepository.ObterPorPeriodoAsync(inicio, fim);
@@ -136,6 +144,44 @@ namespace Tesouraria.Application.Services
                 CategoriaNome = l.Categoria?.Nome ?? string.Empty,
                 CentroCustoNome = l.CentroCusto?.Nome ?? string.Empty
             };
+        }
+
+        public async Task AtualizarAsync(int id, CriarLancamentoDto dto)
+        {
+            var lancamento = await _lancamentoRepository.ObterPorIdAsync(id);
+            if (lancamento == null) throw new Exception("Lançamento não encontrado.");
+
+            // Validação de categoria (mesma lógica da criação)
+            var categoria = await _categoriaRepository.GetByIdAsync(dto.CategoriaId); // Supondo que você injetou este repo
+            if (categoria != null && categoria.Tipo != dto.Tipo)
+                throw new Exception("O tipo da Categoria não corresponde ao tipo do Lançamento.");
+
+            // Chama o método do domínio
+            lancamento.AtualizarDados(
+                dto.Descricao,
+                dto.Valor,
+                dto.DataVencimento,
+                dto.Tipo,
+                dto.CategoriaId,
+                dto.CentroCustoId,
+                dto.FielId,
+                dto.FornecedorId,
+                dto.Observacao
+            );
+
+            await _lancamentoRepository.AtualizarAsync(lancamento);
+            await _lancamentoRepository.CommitAsync();
+        }
+
+        public async Task EstornarLancamento(int id)
+        {
+            var lancamento = await _lancamentoRepository.ObterPorIdAsync(id);
+            if (lancamento == null) throw new Exception("Lançamento não encontrado.");
+
+            lancamento.EstornarBaixa();
+
+            await _lancamentoRepository.AtualizarAsync(lancamento);
+            await _lancamentoRepository.CommitAsync();
         }
     }
 }

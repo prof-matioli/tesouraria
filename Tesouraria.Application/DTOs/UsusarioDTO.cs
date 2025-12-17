@@ -1,13 +1,13 @@
-﻿namespace Tesouraria.Application.DTOs
+﻿using Tesouraria.Domain.Enums;
+
+namespace Tesouraria.Application.DTOs
 {
     public class UsuarioDTO
     {
-        public int Id { get; set; }
+        public int Id { get; set; } // <--- Essencial
         public string Nome { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public string Perfil { get; set; } = string.Empty;
-
-        // Nota: Por segurança, não retornamos a Senha/Hash neste DTO 
-        // usado para trafegar dados do usuário logado na tela.
+        public PerfilUsuario Perfil { get; set; }
+        public string Token { get; set; } = string.Empty; // Caso use JWT no futuro    }
     }
 }

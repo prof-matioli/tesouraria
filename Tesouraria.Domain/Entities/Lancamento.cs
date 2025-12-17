@@ -62,6 +62,21 @@ namespace Tesouraria.Domain.Entities
             Validar();
         }
 
+        public void EstornarBaixa()
+        {
+            if (Status != StatusLancamento.Pago)
+            {
+                throw new InvalidOperationException("Apenas lançamentos pagos podem ser estornados.");
+            }
+
+            // Retorna ao estado original
+            Status = StatusLancamento.Pendente;
+            ValorPago = 0; // Ou null, dependendo de como você mapeou no EF (no Dto usamos null, aqui decimal)
+            DataPagamento = null;
+
+            // Opcional: Registrar em log de auditoria que houve um estorno
+        }
+
         public void Baixar(decimal valorPago, DateTime dataPagamento)
         {
             if (Status == StatusLancamento.Cancelado)
@@ -86,6 +101,41 @@ namespace Tesouraria.Domain.Entities
             if (ValorOriginal <= 0) throw new ArgumentException("O valor deve ser maior que zero.");
             if (CategoriaId <= 0) throw new ArgumentException("Categoria inválida.");
             if (CentroCustoId <= 0) throw new ArgumentException("Centro de Custo inválido.");
+        }
+
+        // Dentro da classe Lancamento
+        public void AtualizarDados(
+            string descricao,
+            decimal valor,
+            DateTime dataVencimento,
+            TipoTransacao tipo,
+            int categoriaId,
+            int centroCustoId,
+            int? fielId,
+            int? fornecedorId,
+            string? observacao)
+        {
+            // Regra de negócio: Não permitir alterar valor de algo já pago sem estornar antes
+            // (Optei por ser flexível aqui, mas poderíamos bloquear se Status == Pago)
+
+            if (string.IsNullOrWhiteSpace(descricao)) throw new ArgumentException("A descrição é obrigatória.");
+            if (valor <= 0) throw new ArgumentException("O valor deve ser maior que zero.");
+
+            Descricao = descricao;
+            ValorOriginal = valor;
+            // Se ainda não foi pago, o ValorPago (se houver lógica de pré-visualização) poderia acompanhar, 
+            // mas por segurança mantemos o original atualizado.
+
+            DataVencimento = dataVencimento;
+            Tipo = tipo;
+            CategoriaId = categoriaId;
+            CentroCustoId = centroCustoId;
+            FielId = fielId;
+            FornecedorId = fornecedorId;
+            Observacao = observacao;
+
+            // Auditabilidade (se tiver DataAtualizacao na BaseEntity)
+            // DataAtualizacao = DateTime.Now; 
         }
     }
 }

@@ -14,6 +14,20 @@ namespace Tesouraria.Desktop.ViewModels
     {
         private readonly ILancamentoService _lancamentoService;
         private readonly IServiceProvider _serviceProvider; // <--- NOVA DEPENDÊNCIA
+        
+        // Comandos
+        public ICommand BuscarCommand { get; }
+        public ICommand NovoCommand { get; }
+        public ICommand BaixarCommand { get; }
+        public ICommand CancelarCommand { get; }
+        public ICommand EditarCommand { get; }
+        public ICommand EstornarCommand { get; }
+        private decimal _saldoPrevisto;
+        public decimal SaldoPrevisto
+        {
+            get => _saldoPrevisto;
+            set => SetProperty(ref _saldoPrevisto, value);
+        }
 
         // Filtros
         private DateTime _dataInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -34,6 +48,7 @@ namespace Tesouraria.Desktop.ViewModels
         public ObservableCollection<LancamentoDto> Lancamentos { get; } = new();
 
         private LancamentoDto? _lancamentoSelecionado;
+
         public LancamentoDto? LancamentoSelecionado
         {
             get => _lancamentoSelecionado;
@@ -42,6 +57,8 @@ namespace Tesouraria.Desktop.ViewModels
                 SetProperty(ref _lancamentoSelecionado, value);
                 (BaixarCommand as RelayCommand)?.RaiseCanExecuteChanged();
                 (CancelarCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (EditarCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (EstornarCommand as RelayCommand)?.RaiseCanExecuteChanged(); 
             }
         }
 
@@ -53,13 +70,8 @@ namespace Tesouraria.Desktop.ViewModels
             set => SetProperty(ref _saldoPeriodo, value);
         }
 
-        // Comandos
-        public ICommand BuscarCommand { get; }
-        public ICommand NovoCommand { get; }
-        public ICommand BaixarCommand { get; }
-        public ICommand CancelarCommand { get; }
 
-        // CONSTRUTOR ATUALIZADO
+        // CONSTRUTOR
         public LancamentoListaViewModel(
             ILancamentoService lancamentoService,
             IServiceProvider serviceProvider) // <--- INJETANDO O PROVIDER
@@ -78,6 +90,10 @@ namespace Tesouraria.Desktop.ViewModels
             BaixarCommand = new RelayCommand(async _ => await BaixarAsync(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pendente);
             CancelarCommand = new RelayCommand(async _ => await CancelarAsync(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status != StatusLancamento.Cancelado);
 
+            EditarCommand = new RelayCommand(async _ => await EditarLancamento(), _ => LancamentoSelecionado != null);
+
+            EstornarCommand = new RelayCommand(async _ => await EstornarLancamento(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pago);
+
             // Carga inicial
             BuscarAsync();
         }
@@ -93,7 +109,11 @@ namespace Tesouraria.Desktop.ViewModels
                     Lancamentos.Add(item);
                 }
 
+                // --- CÁLCULOS DOS SALDOS ---
+                // Saldo Realizado (Caixa Líquido: O que entrou de fato - O que saiu de fato)
                 SaldoPeriodo = await _lancamentoService.ObterSaldoPeriodoAsync(DataInicio, DataFim);
+                // Saldo Previsto (Competência: O que está agendado para vencer neste período)
+                SaldoPrevisto = await _lancamentoService.ObterSaldoPrevistoAsync(DataInicio, DataFim);
             }
             catch (Exception ex)
             {
@@ -101,24 +121,51 @@ namespace Tesouraria.Desktop.ViewModels
             }
         }
 
-        // MÉTODO CORRIGIDO: Usa o Container de DI para criar a janela
-        private void AbrirNovoLancamento()
+        private async void AbrirNovoLancamento()
         {
             try
             {
-                // Pede ao sistema para criar a View (e ele cria a ViewModel e Repositórios automaticamente)
                 var viewCadastro = _serviceProvider.GetRequiredService<LancamentoCadastroView>();
 
-                // Exibe a janela como Modal
-                viewCadastro.Owner = System.Windows.Application.Current.MainWindow; // Opcional: define o pai
+                if (viewCadastro.DataContext is LancamentoCadastroViewModel vm)
+                {
+                    await vm.CarregarListasAsync();
+                }
+
+                viewCadastro.Owner = System.Windows.Application.Current.MainWindow;
                 viewCadastro.ShowDialog();
 
-                // Ao fechar, recarrega a grid
-                BuscarAsync();
+                await BuscarAsync();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro ao abrir janela: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task EditarLancamento()
+        {
+            if (LancamentoSelecionado == null) return;
+
+            try
+            {
+                // Resolve a janela e a VM via DI
+                var viewCadastro = _serviceProvider.GetRequiredService<LancamentoCadastroView>();
+                var viewModel = (LancamentoCadastroViewModel)viewCadastro.DataContext;
+                
+                // CARREGA OS DADOS ANTES DE ABRIR
+                await viewModel.CarregarListasAsync();
+                await viewModel.CarregarParaEdicaoAsync(LancamentoSelecionado.Id);
+
+                viewCadastro.Owner = System.Windows.Application.Current.MainWindow;
+                viewCadastro.ShowDialog();
+
+                // Recarrega a lista após fechar a janela de edição
+                await BuscarAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao abrir edição: {ex.Message}");
             }
         }
 
@@ -162,6 +209,29 @@ namespace Tesouraria.Desktop.ViewModels
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Erro ao cancelar: {ex.Message}");
+                }
+            }
+        }
+
+        private async Task EstornarLancamento()
+        {
+            if (LancamentoSelecionado == null) return;
+
+            var msg = $"Deseja estornar (desfazer) o pagamento deste lançamento?\n\nEle voltará a ficar PENDENTE.\n\nDescrição: {LancamentoSelecionado.Descricao}";
+
+            if (MessageBox.Show(msg, "Confirmar Estorno", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    await _lancamentoService.EstornarLancamento(LancamentoSelecionado.Id);
+
+                    MessageBox.Show("Pagamento estornado com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    await BuscarAsync(); // Atualiza a grid e os saldos
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erro ao estornar: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }

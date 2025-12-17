@@ -12,7 +12,7 @@ namespace Tesouraria.Domain.Interfaces
         // Métodos específicos para consultas financeiras
         Task<IEnumerable<Lancamento>> ObterPorPeriodoAsync(DateTime inicio, DateTime fim);
         Task<decimal> ObterTotalPorPeriodoETipoAsync(DateTime inicio, DateTime fim, TipoTransacao tipo);
-
+        Task<decimal> ObterTotalPrevistoAsync(DateTime inicio, DateTime fim, TipoTransacao tipo);
         // Commit (caso não esteja usando UnitOfWork separado)
         Task<bool> CommitAsync();
     }

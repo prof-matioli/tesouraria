@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Input;
 using Tesouraria.Application.DTOs;
 using Tesouraria.Application.Interfaces;
+using Tesouraria.Desktop.Core;
+using Tesouraria.Domain.Entities;
 // Certifique-se que o namespace abaixo existe (onde está seu AuthService)
 // using Tesouraria.Application.Services; 
 
@@ -49,14 +51,16 @@ namespace Tesouraria.Desktop
                 BtnEntrar.Content = "Verificando...";
                 TxtErro.Text = string.Empty;
 
-                // Chama o serviço (que agora retorna explicitamente UsuarioDTO)
+                // O serviço retorna o DTO
                 UsuarioDTO? usuarioLogado = await _authService.LoginAsync(email, senha);
 
                 if (usuarioLogado != null)
                 {
-                    // Opcional: Você pode guardar o usuário logado em uma variável global/static se precisar
-                    // Ex: App.UsuarioAtual = usuarioLogado;
+                    // --- GRAVA NA SESSÃO ---
+                    // Agora funciona pois SessaoSistema espera um UsuarioDTO
+                    SessaoSistema.UsuarioLogado = usuarioLogado;
 
+                    // Abre o sistema principal
                     AbrirSistemaPrincipal();
                 }
                 else
@@ -66,8 +70,9 @@ namespace Tesouraria.Desktop
             }
             catch (Exception ex)
             {
-                TxtErro.Text = "Erro ao tentar realizar login. Tente novamente.";
-                // Idealmente logar o erro: ex.Message
+                // Log para debug (opcional)
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+                TxtErro.Text = "Erro de conexão ou dados incorretos.";
             }
             finally
             {

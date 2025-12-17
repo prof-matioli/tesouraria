@@ -5,29 +5,30 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:converters="clr-namespace:Tesouraria.Desktop.Converters"
         mc:Ignorable="d"
-        Title="Gestão Financeira - Tesouraria" Height="600" Width="1000"
+        Title="Gestão Financeira - Tesouraria" Height="650" Width="1000"
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
         <converters:TipoTransacaoToColorConverter x:Key="TipoColorConverter"/>
     </Window.Resources>
 
-    <Grid Margin="10">
+    <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" BorderBrush="LightGray" BorderThickness="1" Padding="10" Margin="0,0,0,10" CornerRadius="5">
+        <Border Grid.Row="0" BorderBrush="#DDDDDD" BorderThickness="1" Padding="10" Margin="0,0,0,10" CornerRadius="5" Background="#FAFAFA">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="De:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="Bold"/>
-                <DatePicker SelectedDate="{Binding DataInicio}" Width="120" Margin="0,0,15,0"/>
+                <TextBlock Text="De:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="SemiBold"/>
+                <DatePicker SelectedDate="{Binding DataInicio}" Width="120" Margin="0,0,15,0" VerticalContentAlignment="Center"/>
 
-                <TextBlock Text="Até:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="Bold"/>
-                <DatePicker SelectedDate="{Binding DataFim}" Width="120" Margin="0,0,20,0"/>
+                <TextBlock Text="Até:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="SemiBold"/>
+                <DatePicker SelectedDate="{Binding DataFim}" Width="120" Margin="0,0,20,0" VerticalContentAlignment="Center"/>
 
-                <Button Content="🔍 Filtrar" Command="{Binding BuscarCommand}" Width="100" Height="25"/>
+                <Button Content="🔍 Filtrar" Command="{Binding BuscarCommand}" Width="100" Height="30"/>
             </StackPanel>
         </Border>
 
@@ -38,20 +39,42 @@
                   CanUserAddRows="False"
                   IsReadOnly="True"
                   SelectionMode="Single"
-                  GridLinesVisibility="Horizontal">
+                  GridLinesVisibility="Horizontal"
+                  BorderThickness="1"
+                  BorderBrush="#DDDDDD">
+
+            <DataGrid.Resources>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Padding" Value="10,5"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Background" Value="#F0F0F0"/>
+                </Style>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Padding" Value="5"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="DataGridCell">
+                                <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                                    <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.Resources>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
 
-                <DataGridTextColumn Header="Vencimento" Binding="{Binding DataVencimento, StringFormat=dd/MM/yyyy}" Width="90"/>
+                <DataGridTextColumn Header="Vencimento" Binding="{Binding DataVencimento, StringFormat=dd/MM/yyyy}" Width="100"/>
 
                 <DataGridTextColumn Header="Descrição" Binding="{Binding Descricao}" Width="*"/>
 
-                <DataGridTextColumn Header="Fiel/Fornecedor" Binding="{Binding PessoaNome}" Width="150"/>
+                <DataGridTextColumn Header="Fiel/Fornecedor" Binding="{Binding PessoaNome}" Width="180"/>
 
-                <DataGridTextColumn Header="Categoria" Binding="{Binding CategoriaNome}" Width="130"/>
+                <DataGridTextColumn Header="Categoria" Binding="{Binding CategoriaNome}" Width="150"/>
 
-                <DataGridTemplateColumn Header="Tipo" Width="80">
+                <DataGridTemplateColumn Header="Tipo" Width="90">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Tipo}" 
@@ -61,37 +84,59 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Valor" Binding="{Binding ValorOriginal, StringFormat=C2}" Width="100" FontWeight="Bold"/>
+                <DataGridTextColumn Header="Valor Original" Binding="{Binding ValorOriginal, StringFormat=C2}" Width="110" FontWeight="SemiBold"/>
 
-                <DataGridTextColumn Header="Baixa" Binding="{Binding DataPagamento, StringFormat=dd/MM/yyyy}" Width="90"/>
+                <DataGridTextColumn Header="Data Pagto" Binding="{Binding DataPagamento, StringFormat=dd/MM/yyyy}" Width="100"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <Grid Grid.Row="2" Margin="0,15,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <Border Grid.Row="2" Margin="0,15,0,15" Padding="15,10" Background="#F9F9F9" BorderBrush="#EEEEEE" BorderThickness="1" CornerRadius="5">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
 
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Saldo do Período (Realizado): " FontSize="16"/>
-                <TextBlock Text="{Binding SaldoPeriodo, StringFormat=C2}" FontSize="16" FontWeight="Bold" Foreground="Blue"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,30,0">
+                    <TextBlock Text="Saldo Previsto (Agendado):" FontSize="14" Foreground="#666666" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <Border Background="#FFF8E1" CornerRadius="3" Padding="8,2">
+                        <TextBlock Text="{Binding SaldoPrevisto, StringFormat=C2}" FontSize="16" FontWeight="Bold" Foreground="#CC8800"/>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Saldo Realizado (Caixa):" FontSize="14" Foreground="#666666" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <Border Background="#E3F2FD" CornerRadius="3" Padding="8,2">
+                        <TextBlock Text="{Binding SaldoPeriodo, StringFormat=C2}" FontSize="18" FontWeight="Bold" Foreground="#1565C0"/>
+                    </Border>
+                </StackPanel>
+
             </StackPanel>
+        </Border>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button Content="❌ Cancelar Lançamento" 
-                        Command="{Binding CancelarCommand}" 
-                        Background="#FFECECEC" Foreground="Red"
-                        Width="150" Height="35" Margin="0,0,10,0"/>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
 
-                <Button Content="💲 BAIXAR / PAGAR" 
-                        Command="{Binding BaixarCommand}" 
-                        Width="150" Height="35" Margin="0,0,10,0" FontWeight="Bold"/>
+            <Button Content="❌ Cancelar Lançamento" 
+                    Command="{Binding CancelarCommand}" 
+                    Background="White" BorderBrush="#FFCDD2" BorderThickness="1" Foreground="#C62828"
+                    Width="160" Height="40" Margin="0,0,10,0"/>
 
-                <Button Content="➕ NOVO LANÇAMENTO" 
-                        Command="{Binding NovoCommand}" 
-                        Width="160" Height="35" FontWeight="Bold" Background="#FFDDFFDD"/>
-            </StackPanel>
-        </Grid>
+            <Button Content="↩️ ESTORNAR" 
+                    Command="{Binding EstornarCommand}" 
+                    Width="120" Height="40" Margin="0,0,10,0" 
+                    Background="#FFE0B2" FontWeight="SemiBold"/>
+
+            <Button Content="✏️ EDITAR" 
+                    Command="{Binding EditarCommand}" 
+                    Width="100" Height="40" Margin="0,0,10,0" 
+                    Background="#FFF9C4" FontWeight="SemiBold"/>
+
+            <Button Content="💲 BAIXAR / PAGAR" 
+                    Command="{Binding BaixarCommand}" 
+                    Width="150" Height="40" Margin="0,0,10,0" 
+                    Background="#C8E6C9" FontWeight="Bold" Foreground="#1B5E20"/>
+
+            <Button Content="➕ NOVO LANÇAMENTO" 
+                    Command="{Binding NovoCommand}" 
+                    Width="180" Height="40" 
+                    Background="#2196F3" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
+        </StackPanel>
+
     </Grid>
 </Window>

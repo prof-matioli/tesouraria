@@ -23,14 +23,22 @@ namespace Tesouraria.Application.Services
 
         public async Task<UsuarioDTO?> LoginAsync(string email, string senha)
         {
-            if (string.IsNullOrWhiteSpace(email)) return null;
-
-            // O filtro acontece no banco de dados (SQL WHERE Email = ...), retornando apenas 1 registro.
+            // 1. Busca o usuário no banco pelo e-mail
+            // (Ajuste conforme seu repositório de usuário)
             var usuario = await _usuarioRepository.ObterPorEmailAsync(email);
-            var senhhsh = BCrypt.Net.BCrypt.HashPassword(senha);
-            if (usuario == null) return null;
-            if (!BCrypt.Net.BCrypt.Verify(senha, usuario.SenhaHash)) return null;
-            return _mapper.Map<UsuarioDTO>(usuario);
+
+            // 2. Verifica se existe e se a senha bate
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(senha, usuario.SenhaHash))
+                return null; // Login falhou
+
+            // 3. Se deu certo, converte para DTO e retorna
+            return new UsuarioDTO
+            {
+                Id = usuario.Id, // <--- Aqui pegamos o ID real do banco (ex: 5, 10, etc)
+                Nome = usuario.Nome,
+                Email = usuario.Email,
+                Perfil = usuario.Perfil
+            };
         }
     }
 }

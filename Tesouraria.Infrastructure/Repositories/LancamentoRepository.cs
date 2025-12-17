@@ -47,6 +47,17 @@ namespace Tesouraria.Infra.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<decimal> ObterTotalPrevistoAsync(DateTime inicio, DateTime fim, TipoTransacao tipo)
+        {
+            // Soma o Valor Original (previsto) de tudo que vence no período e NÃO está cancelado.
+            // Note que incluímos os Pagos e os Pendentes aqui.
+            return await _context.Lancamento
+                .Where(l => l.Status != StatusLancamento.Cancelado
+                            && l.DataVencimento >= inicio
+                            && l.DataVencimento <= fim
+                            && l.Tipo == tipo)
+                .SumAsync(l => l.ValorOriginal);
+        }
         public async Task<decimal> ObterTotalPorPeriodoETipoAsync(DateTime inicio, DateTime fim, TipoTransacao tipo)
         {
             return await _context.Lancamento

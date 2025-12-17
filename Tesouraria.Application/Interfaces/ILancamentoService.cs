@@ -1,4 +1,5 @@
 ﻿using Tesouraria.Application.DTOs;
+using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Enums;
 
 namespace Tesouraria.Application.Interfaces
@@ -13,5 +14,11 @@ namespace Tesouraria.Application.Interfaces
 
         // Útil para Dashboards
         Task<decimal> ObterSaldoPeriodoAsync(DateTime inicio, DateTime fim);
+
+        Task AtualizarAsync(int id, CriarLancamentoDto dto);
+
+        Task EstornarLancamento(int id);
+
+        Task<decimal> ObterSaldoPrevistoAsync(DateTime inicio, DateTime fim);
     }
 }
