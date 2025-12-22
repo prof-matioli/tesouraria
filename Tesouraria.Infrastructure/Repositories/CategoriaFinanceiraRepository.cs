@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Interfaces;
-using Tesouraria.Infrastructure.Data;
+using Tesouraria.Infrastructure.Data; // Ajuste para onde está seu DbContext
 
-namespace Tesouraria.Infra.Data.Repositories
+namespace Tesouraria.Infrastructure.Repositories
 {
     public class CategoriaFinanceiraRepository : ICategoriaFinanceiraRepository
     {
@@ -16,33 +16,35 @@ namespace Tesouraria.Infra.Data.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<CategoriaFinanceira>> ObterTodosAsync()
+        public async Task<IEnumerable<CategoriaFinanceira>> GetAllAsync()
         {
+            // AsNoTracking melhora performance para leitura
             return await _context.Set<CategoriaFinanceira>()
-                                 .AsNoTracking()
-                                 .ToListAsync();
+                     .AsNoTracking() 
+                     .ToListAsync();
+
         }
 
-        public async Task<CategoriaFinanceira?> ObterPorIdAsync(int id)
+        public async Task<CategoriaFinanceira?> GetByIdAsync(int id)
         {
             return await _context.Set<CategoriaFinanceira>().FindAsync(id);
         }
 
-        public async Task AdicionarAsync(CategoriaFinanceira entity)
+        public async Task AddAsync(CategoriaFinanceira entity)
         {
             await _context.Set<CategoriaFinanceira>().AddAsync(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async Task AtualizarAsync(CategoriaFinanceira entity)
+        public async Task UpdateAsync(CategoriaFinanceira entity)
         {
             _context.Set<CategoriaFinanceira>().Update(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async Task ExcluirAsync(int id)
+        public async Task DeleteAsync(int id)
         {
-            var entity = await ObterPorIdAsync(id);
+            var entity = await GetByIdAsync(id);
             if (entity != null)
             {
                 _context.Set<CategoriaFinanceira>().Remove(entity);

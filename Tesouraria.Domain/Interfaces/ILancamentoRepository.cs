@@ -3,7 +3,7 @@ using Tesouraria.Domain.Enums;
 
 namespace Tesouraria.Domain.Interfaces
 {
-    public interface ILancamentoRepository
+    public interface ILancamentoRepository 
     {
         Task<Lancamento?> ObterPorIdAsync(int id);
         Task AdicionarAsync(Lancamento lancamento);
@@ -15,5 +15,15 @@ namespace Tesouraria.Domain.Interfaces
         Task<decimal> ObterTotalPrevistoAsync(DateTime inicio, DateTime fim, TipoTransacao tipo);
         // Commit (caso não esteja usando UnitOfWork separado)
         Task<bool> CommitAsync();
+
+        Task<IEnumerable<Lancamento>> ObterFiltradosAsync(
+            DateTime inicio,
+            DateTime fim,
+            int? centroCustoId,
+            TipoTransacao? tipo,
+            bool apenasPagos);
+
+        // Método específico para trazer dados completos (com Includes)
+        new Task<IEnumerable<Lancamento>> GetAllAsync();
     }
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Tesouraria.Application.DTOs;
+﻿using Tesouraria.Application.DTOs;
 using Tesouraria.Application.Interfaces;
 using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Interfaces;

@@ -6,10 +6,10 @@ namespace Tesouraria.Domain.Interfaces
 {
     public interface ICategoriaFinanceiraRepository
     {
-        Task<IEnumerable<CategoriaFinanceira>> ObterTodosAsync();
-        Task<CategoriaFinanceira?> ObterPorIdAsync(int id);
-        Task AdicionarAsync(CategoriaFinanceira entity);
-        Task AtualizarAsync(CategoriaFinanceira entity);
-        Task ExcluirAsync(int id);
+        Task<IEnumerable<CategoriaFinanceira>> GetAllAsync();
+        Task<CategoriaFinanceira?> GetByIdAsync(int id);
+        Task AddAsync(CategoriaFinanceira entity);
+        Task UpdateAsync(CategoriaFinanceira entity);
+        Task DeleteAsync(int id);
     }
 }

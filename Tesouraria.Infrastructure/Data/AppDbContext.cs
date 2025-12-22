@@ -32,18 +32,24 @@ namespace Tesouraria.Infrastructure.Data
             // usaremos este placeholder para PASSAR a Migration.
             // LOGO APÓS rodar a migration, faremos um ajuste simples para você conseguir logar.
 
-            modelBuilder.Entity<Usuario>().HasData(
-                new
-                {
-                    Id = 1,
-                    Nome = "Administrador",
-                    Email = "admin@paroquia.com",
-                    SenhaHash = hashFixoAdmin, // Usando a string fixa
-                    Perfil = PerfilUsuario.Administrador,
-                    Ativo = true,
-                    DataCriacao = new DateTime(2024, 1, 1) // Data Fixa
-                }
-            );
+            modelBuilder.Entity<Fornecedor>().HasQueryFilter(p => p.Ativo);
+            modelBuilder.Entity<Fiel>().HasQueryFilter(p => p.Ativo);
+            modelBuilder.Entity<CentroCusto>().HasQueryFilter(p => p.Ativo);
+            modelBuilder.Entity<CategoriaFinanceira>().HasQueryFilter(p => p.Ativo);
+            /*
+                                                modelBuilder.Entity<Usuario>().HasData(
+                                                    new
+                                                    {
+                                                        Id = 1,
+                                                        Nome = "Administrador",
+                                                        Email = "admin@paroquia.com",
+                                                        SenhaHash = hashFixoAdmin, // Usando a string fixa
+                                                        Perfil = PerfilUsuario.Administrador,
+                                                        Ativo = true,
+                                                        DataCriacao = new DateTime(2024, 1, 1) // Data Fixa
+                                                    }
+                                                );
+                                    */
         }
     }
 }

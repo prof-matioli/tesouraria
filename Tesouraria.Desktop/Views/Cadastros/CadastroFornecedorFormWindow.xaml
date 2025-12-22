@@ -1,0 +1,37 @@
+﻿<Window x:Class="Tesouraria.Desktop.Views.Cadastros.CadastroFornecedorFormWindow"        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dados do Fornecedor" Height="450" Width="500"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Background="#F4F6F7">
+
+    <Border Margin="15" Background="White" CornerRadius="10" Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Ficha do Fornecedor" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,20"/>
+
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Nome / Razão Social *" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Entity.RazaoSocial, UpdateSourceTrigger=PropertyChanged}" Height="30" Margin="0,0,0,10"/>
+
+                <TextBlock Text="CNPJ / CPF" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Entity.CNPJ}" Height="30" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Telefone" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Entity.Telefone}" Height="30" Margin="0,0,0,10"/>
+
+                <TextBlock Text="E-mail" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Entity.Email}" Height="30" Margin="0,0,0,10"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Cancelar" Command="{Binding FecharCommand}" Width="100" Height="35" Margin="0,0,10,0"/>
+                <Button Content="Salvar" Command="{Binding SalvarCommand}" Width="100" Height="35" Background="#2980B9" Foreground="White" FontWeight="Bold"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

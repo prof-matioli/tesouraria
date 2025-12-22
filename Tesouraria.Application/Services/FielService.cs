@@ -31,6 +31,10 @@ namespace Tesouraria.Application.Services
                 Nome = f.Nome,
                 CPF = f.CPF,
                 DataNascimento = f.DataNascimento,
+                Dizimista = f.Dizimista,
+                Endereco = f.Endereco,
+                Email = f.Email,
+                Telefone = f.Telefone
                 // Mapeie outros campos necessários
             }).ToList();
         }

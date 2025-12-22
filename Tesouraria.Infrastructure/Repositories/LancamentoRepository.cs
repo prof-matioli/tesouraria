@@ -4,7 +4,7 @@ using Tesouraria.Domain.Enums;
 using Tesouraria.Domain.Interfaces;
 using Tesouraria.Infrastructure.Data;
 
-namespace Tesouraria.Infra.Data.Repositories
+namespace Tesouraria.Infrastructure.Repositories
 {
     public class LancamentoRepository : ILancamentoRepository
     {
@@ -71,6 +71,70 @@ namespace Tesouraria.Infra.Data.Repositories
         public async Task<bool> CommitAsync()
         {
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<IEnumerable<Lancamento>> ObterFiltradosAsync(
+                                    DateTime inicio,
+                                    DateTime fim,
+                                    int? centroCustoId,
+                                    TipoTransacao? tipo,
+                                    bool apenasPagos)
+        {
+            var query = _context.Lancamento
+                .AsNoTracking() // Importante para performance de relatório
+                .Include(l => l.Categoria)
+                .Include(l => l.CentroCusto)
+                .Include(l => l.Fiel)
+                .Include(l => l.Fornecedor)
+                .AsQueryable();
+
+            // Filtro de Datas e Status
+            if (apenasPagos)
+            {
+                query = query.Where(l => l.Status == StatusLancamento.Pago
+                                         && l.DataPagamento >= inicio
+                                         && l.DataPagamento <= fim);
+            }
+            else
+            {
+                query = query.Where(l => l.Status != StatusLancamento.Cancelado
+                                         && l.DataVencimento >= inicio
+                                         && l.DataVencimento <= fim);
+            }
+
+            // Filtro de Centro de Custo
+            if (centroCustoId.HasValue && centroCustoId.Value > 0)
+            {
+                query = query.Where(l => l.CentroCustoId == centroCustoId.Value);
+            }
+
+            // Filtro de Tipo (Receita/Despesa)
+            if (tipo.HasValue)
+            {
+                query = query.Where(l => l.Tipo == tipo.Value);
+            }
+
+            // Ordenação
+            if (apenasPagos)
+                return await query.OrderBy(l => l.DataPagamento).ToListAsync();
+            else
+                return await query.OrderBy(l => l.DataVencimento).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Lancamento>> GetAllAsync()
+        {
+            return await _context.Lancamento
+                            .AsNoTracking() // Melhora performance pois não rastreia alterações (apenas leitura)
+
+                            // === EAGER LOADING (Carregamento dos Relacionamentos) ===
+                            // Isso preenche os objetos dentro do Lançamento para exibir os Nomes na tela
+                            .Include(l => l.Categoria)
+                            .Include(l => l.CentroCusto)
+                            // .Include(l => l.Fornecedor) // Descomente se tiver relacionamento direto
+                            // .Include(l => l.Fiel)       // Descomente se tiver relacionamento direto
+
+                            .OrderByDescending(l => l.DataVencimento) // Ordena por data (mais recentes primeiro)
+                            .ToListAsync();
         }
     }
 }

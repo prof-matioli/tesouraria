@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Windows;
+using System.Windows.Input;
 using Tesouraria.Application.DTOs;
 using Tesouraria.Application.Interfaces;
 using Tesouraria.Desktop.Views;
@@ -13,6 +14,7 @@ namespace Tesouraria.Desktop
     {
         // Serviço injetado para manipular Fieis
         private readonly IBaseService<Fiel, FielDTO> _fielService;
+        public ICommand AbrirRelatoriosCommand { get; }
 
         // Construtor com Injeção de Dependência
         public MainWindow(IBaseService<Fiel, FielDTO> fielService)

@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Interfaces;
-using Tesouraria.Infrastructure.Data;
 
-namespace Tesouraria.Infra.Data.Repositories
+namespace Tesouraria.Infrastructure.Data.Repositories
 {
     public class CentroCustoRepository : ICentroCustoRepository
     {

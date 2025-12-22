@@ -6,7 +6,7 @@ using Tesouraria.Domain.Common;
 using Tesouraria.Domain.Interfaces;
 using Tesouraria.Infrastructure.Data;
 
-namespace Tesouraria.Infra.Data.Repositories
+namespace Tesouraria.Infrastructure.Data.Repositories
 {
     public class Repository<T> : IRepository<T> where T : BaseEntity
     {
@@ -24,10 +24,9 @@ namespace Tesouraria.Infra.Data.Repositories
             return await _dataset.FindAsync(id);
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
-            // Retorna apenas os ativos
-            return await _dataset.Where(x => x.Ativo).ToListAsync();
+            return await _context.Set<T>().AsNoTracking().ToListAsync();
         }
 
         public async Task<T> AddAsync(T entity)
@@ -49,10 +48,21 @@ namespace Tesouraria.Infra.Data.Repositories
         public async Task DeleteAsync(int id)
         {
             var entity = await _dataset.FindAsync(id);
+
             if (entity != null)
             {
-                entity.Ativo = false; // Soft Delete
+                // 1. Altera os valores
+                entity.Ativo = false;
                 entity.DataAtualizacao = DateTime.Now;
+
+                // 2. O SEGREDO: Força o EF a reconhecer que houve mudança
+                // Isso garante que o UPDATE será gerado mesmo se o rastreamento falhar
+                _context.Entry(entity).State = EntityState.Modified;
+
+                // Ou, se preferir uma sintaxe mais simples que faz a mesma coisa:
+                // _dataset.Update(entity); 
+
+                // 3. Salva no banco
                 await _context.SaveChangesAsync();
             }
         }

@@ -20,5 +20,9 @@ namespace Tesouraria.Application.Interfaces
         Task EstornarLancamento(int id);
 
         Task<decimal> ObterSaldoPrevistoAsync(DateTime inicio, DateTime fim);
+
+        Task<IEnumerable<LancamentoDto>> GerarRelatorioAsync(FiltroRelatorioDto filtro);
+
+        Task<DashboardResumoDto> ObterResumoDashboardAsync();
     }
 }

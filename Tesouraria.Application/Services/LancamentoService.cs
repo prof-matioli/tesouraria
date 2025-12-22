@@ -3,6 +3,7 @@ using Tesouraria.Application.Interfaces;
 using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Enums;
 using Tesouraria.Domain.Interfaces;
+using static Tesouraria.Application.DTOs.DashboardResumoDto;
 
 namespace Tesouraria.Application.Services
 {
@@ -23,6 +24,33 @@ namespace Tesouraria.Application.Services
             _categoriaRepository = categoriaRepository;
         }
 
+        public async Task<IEnumerable<LancamentoDto>> GerarRelatorioAsync(FiltroRelatorioDto filtro)
+        {
+            // Chama o método novo do repositório
+            var lista = await _lancamentoRepository.ObterFiltradosAsync(
+                filtro.DataInicio,
+                filtro.DataFim,
+                filtro.CentroCustoId,
+                filtro.Tipo,
+                filtro.ApenasPagos
+            );
+
+            // Faz o Mapeamento para DTO
+            return lista.Select(l => new LancamentoDto
+            {
+                Id = l.Id,
+                Descricao = l.Descricao,
+                ValorOriginal = l.ValorOriginal,
+                ValorPago = l.ValorPago,
+                DataVencimento = l.DataVencimento,
+                DataPagamento = l.DataPagamento,
+                Tipo = l.Tipo,
+                Status = l.Status,
+                CategoriaNome = l.Categoria?.Nome ?? "",
+                CentroCustoNome = l.CentroCusto?.Nome ?? "",
+                PessoaNome = l.Tipo == TipoTransacao.Receita ? (l.Fiel?.Nome) : (l.Fornecedor?.NomeFantasia)
+            });
+        }
         public async Task<decimal> ObterSaldoPrevistoAsync(DateTime inicio, DateTime fim)
         {
             var receitas = await _lancamentoRepository.ObterTotalPrevistoAsync(inicio, fim, TipoTransacao.Receita);
@@ -182,6 +210,52 @@ namespace Tesouraria.Application.Services
 
             await _lancamentoRepository.AtualizarAsync(lancamento);
             await _lancamentoRepository.CommitAsync();
+        }
+
+        public async Task<DashboardResumoDto> ObterResumoDashboardAsync()
+        {
+            // Busca todos os lançamentos (Idealmente, filtrar por mês/ano no Repositório para performance)
+            // Aqui faremos uma implementação simplificada buscando tudo e filtrando em memória
+            // Em produção: _repository.GetByDateRange(...)
+
+            var todosLancamentos = await _lancamentoRepository.GetAllAsync();
+
+            // Filtra mês atual
+            var hoje = DateTime.Now;
+            var lancamentosMes = todosLancamentos
+                .Where(x => x.DataVencimento.Month == hoje.Month && x.DataVencimento.Year == hoje.Year)
+                .ToList();
+
+            var resumo = new DashboardResumoDto
+            {
+                TotalReceitas = lancamentosMes
+                    .Where(x => x.Tipo == TipoTransacao.Receita)
+                    .Sum(x => x.ValorPago),
+
+                TotalDespesas = lancamentosMes
+                    .Where(x => x.Tipo == TipoTransacao.Despesa)
+                    .Sum(x => x.ValorPago),
+
+                ComparativoReceita = "+ 0% vs mês ant.", // Lógica de comparação viria aqui
+                ComparativoDespesa = "Dentro da meta"
+            };
+
+            // 2. Lógica do Gráfico (Últimos 6 meses)
+            var dataInicioGrafico = hoje.AddMonths(-5); // 5 meses atrás + atual = 6
+            var dataCorte = new DateTime(dataInicioGrafico.Year, dataInicioGrafico.Month, 1); // Dia 1
+
+            var dadosHistoricos = todosLancamentos
+                .Where(x => x.DataVencimento >= dataCorte)
+                .GroupBy(x => new { x.DataVencimento.Year, x.DataVencimento.Month })
+                .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+                .Select(g => new GraficoPontoDto
+                {
+                    Mes = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM").ToUpper(), // "JAN"
+                    Receitas = g.Where(x => x.Tipo == TipoTransacao.Receita).Sum(x => x.ValorPago),
+                    Despesas = g.Where(x => x.Tipo == TipoTransacao.Despesa).Sum(x => x.ValorPago)
+                })
+                .ToList();
+            return resumo;
         }
     }
 }

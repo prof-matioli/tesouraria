@@ -18,13 +18,15 @@
         public void Adicionar(Fornecedor fornecedor)
         {
             _context.Fornecedores.Add(fornecedor);
-            _context.SaveChanges();
+            //_context.SaveChanges();
+            _context.SaveChangesAsync();
         }
 
         public void Atualizar(Fornecedor fornecedor)
         {
             _context.Fornecedores.Update(fornecedor);
-            _context.SaveChanges();
+            //_context.SaveChanges();
+            _context.SaveChangesAsync();
         }
 
         public void Excluir(int id)
@@ -33,7 +35,8 @@
             if (fornecedor != null)
             {
                 _context.Fornecedores.Remove(fornecedor);
-                _context.SaveChanges();
+                //_context.SaveChanges();
+                _context.SaveChangesAsync();
             }
         }
 
