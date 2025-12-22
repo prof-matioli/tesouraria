@@ -142,7 +142,7 @@ namespace Tesouraria.Desktop.ViewModels
             {
                 // Resolve a janela pelo container de DI (garante que o VM dela também seja injetado)
                 var janela = _serviceProvider.GetRequiredService<TWindow>();
-                janela.ShowDialog(); // Abre modal
+                janela.Show(); 
 
                 // Ao fechar a janela filha, recarrega o dashboard para atualizar saldos
                 _ = CarregarDashboard();
