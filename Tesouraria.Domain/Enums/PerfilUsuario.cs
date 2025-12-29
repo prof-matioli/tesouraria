@@ -2,9 +2,10 @@
 {
     public enum PerfilUsuario
     {
-        Administrador = 1,
-        Paroco = 2,
-        Tesoureiro = 3,
-        Secretaria = 4
+        Usuario = 1,        // Consulta e Relatórios básicos
+        Secretaria = 2,     // + Cadastros (Fieis/Fornecedores) e Lançamentos
+        Tesoureira = 3,     // + Centros de Custo e Categorias Financeiras
+        Paroco = 4,         // Equivalente a Tesoureira (semanticamente distinto)
+        Admin = 99          // Acesso Total
     }
 }

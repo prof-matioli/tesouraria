@@ -5,11 +5,30 @@
         WindowStartupLocation="CenterScreen" Background="#F4F6F7">
 
     <Window.Resources>
-        <Style TargetType="Button" x:Key="BtnStyle">
-            <Setter Property="Height" Value="35"/>
+        <Style TargetType="Button" x:Key="BaseButtonStyle">
+            <Setter Property="Height" Value="38"/>
             <Setter Property="Padding" Value="15,0"/>
             <Setter Property="Margin" Value="5,0"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#BDC3C7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
@@ -42,10 +61,26 @@
         </Border>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Content="Atualizar" Command="{Binding BuscarCommand}" Style="{StaticResource BtnStyle}"/>
-            <Button Content="Excluir" Command="{Binding ExcluirCommand}" Style="{StaticResource BtnStyle}" Background="#E74C3C" Foreground="White"/>
-            <Button Content="Editar" Command="{Binding EditarCommand}" Style="{StaticResource BtnStyle}" Background="#3498DB" Foreground="White"/>
-            <Button Content="Novo" Command="{Binding NovoCommand}" Style="{StaticResource BtnStyle}" Background="#2ECC71" Foreground="White"/>
+            <Button Content="🔄 Atualizar" 
+                    Command="{Binding BuscarCommand}"
+                    Style="{StaticResource BaseButtonStyle}"
+                    Background="#95A5A6" Foreground="White" Width="120"/>
+
+            <Button Content="🗑️ Excluir" 
+                    Command="{Binding ExcluirCommand}"
+                    Style="{StaticResource BaseButtonStyle}"
+                    Background="#E74C3C" Foreground="White" Width="120"/>
+
+            <Button Content="✏️ Editar" 
+                    Command="{Binding EditarCommand}"
+                    Style="{StaticResource BaseButtonStyle}"
+                    Background="#3498DB" Foreground="White" Width="120"/>
+
+            <Button Content="➕ Novo" 
+                    Command="{Binding NovoCommand}"
+                    Style="{StaticResource BaseButtonStyle}"
+                    Background="#2ECC71" Foreground="White"
+                    Padding="20,0" Width="120"/>
         </StackPanel>
     </Grid>
 </Window>

@@ -99,7 +99,7 @@
                 <StackPanel Visibility="{Binding IsDespesa, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="Fornecedor (Opcional):"/>
                     <ComboBox ItemsSource="{Binding Fornecedores}"
-                              DisplayMemberPath="NomeFantasia"
+                              DisplayMemberPath="RazaoSocial"
                               SelectedValuePath="Id"
                               SelectedValue="{Binding Dto.FornecedorId}"
                               Style="{StaticResource InputStyle}"/>

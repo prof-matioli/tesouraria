@@ -103,23 +103,23 @@
             <Button Content="🔄 Atualizar" 
                     Command="{Binding BuscarCommand}"
                     Style="{StaticResource BaseButtonStyle}"
-                    Background="#95A5A6" Foreground="White"/>
+                    Background="#95A5A6" Foreground="White" Width="120"/>
 
             <Button Content="🗑️ Excluir" 
                     Command="{Binding ExcluirCommand}"
                     Style="{StaticResource BaseButtonStyle}"
-                    Background="#E74C3C" Foreground="White"/>
+                    Background="#E74C3C" Foreground="White" Width="120"/>
 
             <Button Content="✏️ Editar" 
                     Command="{Binding EditarCommand}"
                     Style="{StaticResource BaseButtonStyle}"
-                    Background="#3498DB" Foreground="White"/>
+                    Background="#3498DB" Foreground="White" Width="120"/>
 
-            <Button Content="➕ Novo Cadastro" 
+            <Button Content="➕ Novo" 
                     Command="{Binding NovoCommand}"
                     Style="{StaticResource BaseButtonStyle}"
                     Background="#2ECC71" Foreground="White"
-                    Padding="20,0"/>
+                    Padding="20,0" Width="120"/>
         </StackPanel>
     </Grid>
 </Window>

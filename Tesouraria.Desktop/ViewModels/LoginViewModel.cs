@@ -13,7 +13,7 @@ namespace Tesouraria.Desktop.ViewModels
 {
     public class LoginViewModel : ViewModelBase
     {
-        private readonly IAuthService _authService;
+        private readonly IUsuarioService _usuarioService;
         private readonly IServiceProvider _serviceProvider;
 
         // Propriedades de Interface
@@ -62,9 +62,9 @@ namespace Tesouraria.Desktop.ViewModels
         public ICommand EntrarCommand { get; }
         public ICommand SairCommand { get; }
 
-        public LoginViewModel(IAuthService authService, IServiceProvider serviceProvider)
+        public LoginViewModel(IUsuarioService usuarioService, IServiceProvider serviceProvider)
         {
-            _authService = authService;
+            _usuarioService = usuarioService;
             _serviceProvider = serviceProvider;
 
             // O comando recebe o PasswordBox como parâmetro
@@ -91,8 +91,8 @@ namespace Tesouraria.Desktop.ViewModels
                 MensagemErro = string.Empty; // Limpa mensagens anteriores
 
                 // Chama o serviço de autenticação
-                UsuarioDTO? usuario = await _authService.LoginAsync(Email.Trim(), senha);
-
+               // UsuarioDTO? usuario = await _authService.LoginAsync(Email.Trim(), senha);
+                UsuarioDTO? usuario = await _usuarioService.AutenticarAsync(Email.Trim(), senha);
                 if (usuario != null)
                 {
                     // Login com sucesso: Salva na sessão e abre a tela principal

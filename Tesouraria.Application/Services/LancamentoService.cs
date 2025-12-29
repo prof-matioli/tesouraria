@@ -86,7 +86,7 @@ namespace Tesouraria.Application.Services
                 CentroCustoNome = l.CentroCusto?.Nome ?? "N/A",
                 PessoaNome = l.Tipo == TipoTransacao.Receita
                     ? (l.Fiel?.Nome ?? "Anônimo")
-                    : (l.Fornecedor?.NomeFantasia ?? "Diversos")
+                    : (l.Fornecedor?.RazaoSocial ?? "Diversos")
             });
         }
         public async Task<int> RegistrarAsync(CriarLancamentoDto dto)

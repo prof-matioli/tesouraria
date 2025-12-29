@@ -18,18 +18,18 @@ namespace Tesouraria.Infrastructure.Data.Configurations
 
             builder.Property(u => u.Email)
                 .IsRequired()
-                .HasMaxLength(100);
+                .HasMaxLength(150);
 
-            // Cria um índice único para não permitir dois usuários com mesmo email
+            // Índice único (Perfeito!)
             builder.HasIndex(u => u.Email).IsUnique();
 
             builder.Property(u => u.SenhaHash)
                 .IsRequired();
 
-            // Salva o Enum como Texto no banco (fica mais legível: 'Administrador' em vez de '1')
-            builder.Property(u => u.Perfil)
-                .HasConversion<string>()
-                .IsRequired();
+            builder.HasOne(u => u.Perfil)     // Um Usuário tem UM Perfil
+                   .WithMany()                // Um Perfil tem MUITOS Usuários
+                   .HasForeignKey(u => u.PerfilId) // A chave que liga é PerfilId
+                   .IsRequired();             // É obrigatório ter perfil
         }
     }
 }

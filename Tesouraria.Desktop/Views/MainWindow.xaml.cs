@@ -31,8 +31,6 @@ namespace Tesouraria.Desktop.Views
             {
                 e.Cancel = true;
             }
-
-            // Se clicar em 'Sim', o evento prossegue e a janela fecha.
         }
     }
 }

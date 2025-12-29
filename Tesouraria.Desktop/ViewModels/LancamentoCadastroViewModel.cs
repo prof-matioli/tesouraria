@@ -28,8 +28,8 @@ namespace Tesouraria.Desktop.ViewModels
         public ObservableCollection<CentroCusto> CentrosCusto { get; } = new();
         public ObservableCollection<CategoriaFinanceira> CategoriasFiltradas { get; } = new();
         public ObservableCollection<Fiel> Fieis { get; } = new();
-        public ObservableCollection<Fornecedor> Fornecedores { get; } = new();
-
+        //public ObservableCollection<Fornecedor> Fornecedores { get; } = new();
+        public ObservableCollection<Fornecedor> Fornecedores { get; } = new ObservableCollection<Fornecedor>();
         // Controle de Tela
         private bool _isReceita;
 

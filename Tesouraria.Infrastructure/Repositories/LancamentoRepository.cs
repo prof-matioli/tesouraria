@@ -136,5 +136,6 @@ namespace Tesouraria.Infrastructure.Repositories
                             .OrderByDescending(l => l.DataVencimento) // Ordena por data (mais recentes primeiro)
                             .ToListAsync();
         }
+
     }
 }

@@ -10,7 +10,7 @@ namespace Tesouraria.Infrastructure.Data
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
             // Coloque aqui a MESMA string de conexão que está no seu App.xaml.cs ou appsettings.json
-            optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=Tesouraria;Trusted_Connection=True;");
+            optionsBuilder.UseSqlServer(@"Server=192.168.101.179; Database=Tesouraria; User Id=sa; Password=Senh@Forte; Integrated Security=SSPI;");
             optionsBuilder.EnableSensitiveDataLogging(true);
 
             return new AppDbContext(optionsBuilder.Options);

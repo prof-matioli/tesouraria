@@ -245,6 +245,36 @@ namespace Tesouraria.Infrastructure.Migrations
                     b.ToTable("Lancamentos", (string)null);
                 });
 
+            modelBuilder.Entity("Tesouraria.Domain.Entities.Perfil", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DataAtualizacao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DataCriacao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Perfis");
+                });
+
             modelBuilder.Entity("Tesouraria.Domain.Entities.Usuario", b =>
                 {
                     b.Property<int>("Id")
@@ -264,17 +294,16 @@ namespace Tesouraria.Infrastructure.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Perfil")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("PerfilId")
+                        .HasColumnType("int");
 
                     b.Property<string>("SenhaHash")
                         .IsRequired()
@@ -285,19 +314,9 @@ namespace Tesouraria.Infrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Usuarios", (string)null);
+                    b.HasIndex("PerfilId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Ativo = true,
-                            DataCriacao = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Email = "admin@paroquia.com",
-                            Nome = "Administrador",
-                            Perfil = "Administrador",
-                            SenhaHash = "$2a$11$P9Q/P9Q/P9Q/P9Q/P9Q/P9Q/P9Q/P9Q/P9Q/P9Q/P9Q/P9Q/P9Q/P"
-                        });
+                    b.ToTable("Usuarios", (string)null);
                 });
 
             modelBuilder.Entity("Tesouraria.Domain.Entities.Lancamento", b =>
@@ -339,6 +358,17 @@ namespace Tesouraria.Infrastructure.Migrations
                     b.Navigation("Fornecedor");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("Tesouraria.Domain.Entities.Usuario", b =>
+                {
+                    b.HasOne("Tesouraria.Domain.Entities.Perfil", "Perfil")
+                        .WithMany()
+                        .HasForeignKey("PerfilId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Perfil");
                 });
 #pragma warning restore 612, 618
         }

@@ -15,10 +15,9 @@ using Tesouraria.Infrastructure.Repositories;
 using Tesouraria.Infrastructure.Data.Repositories;
 
 using Tesouraria.Application.Mappings;
-using Microsoft.Extensions.Logging;
-using Tesouraria.Domain.Entities;
-using Tesouraria.Infra.Data.Repositories;
-using System;
+using QuestPDF.Infrastructure;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace Tesouraria.Desktop
 {
@@ -26,9 +25,21 @@ namespace Tesouraria.Desktop
     {
         // Propriedade pública para acesso ao Container de Injeção de Dependência
         public IServiceProvider ServiceProvider { get; private set; }
+        public IConfiguration Configuration { get; private set; }
 
         public App()
         {
+            // 1. CONSTRÓI A CONFIGURAÇÃO (Lê o JSON)
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+            Configuration = builder.Build();
+
+            // Configura a licença para uso Gratuito (Comunidade/Non-profit)
+            QuestPDF.Settings.License = LicenseType.Community;
+            // ============================================================
+
             ServiceCollection services = new ServiceCollection();
             ConfigureServices(services);
             ServiceProvider = services.BuildServiceProvider();
@@ -46,12 +57,32 @@ namespace Tesouraria.Desktop
                 // 2. Constrói o provedor
                 ServiceProvider = serviceCollection.BuildServiceProvider();
 
+                // --- BLOCO DE CRIAÇÃO/RESET COM DEBUG ---
+                try
+                {
+                    // Tenta criar o banco. Se der erro, vai cair no 'catch' e mostrar a mensagem.
+                    ResetarBancoDados(ServiceProvider);
+
+                }
+                catch (Exception ex)
+                {
+                    // ESTA MENSAGEM VAI NOS DIZER O PROBLEMA REAL
+                    MessageBox.Show($"ERRO FATAL AO CRIAR BANCO:\n\n{ex.Message}\n\n{ex.InnerException?.Message}",
+                                    "Erro de Inicialização",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Error);
+
+                    // Fecha o app pois sem banco não funciona
+                    Shutdown();
+                    return;
+                }
                 // 3. Configura licença do QuestPDF
                 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
                 // 4. Inicia pela tela de Login
                 // Envolvemos em um bloco try/catch para pegar erros de injeção
                 var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+
                 loginWindow.Show();
             }
             catch (Exception ex)
@@ -68,13 +99,29 @@ namespace Tesouraria.Desktop
                 Shutdown();
             }
         }
+
+        private void ResetarBancoDados(IServiceProvider serviceProvider)
+        {
+            using (var scope = serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                // Tenta aplicar as migrations. 
+                // Se o banco não existir, este comando CRIA o banco automaticamente.
+                //dbContext.Database.Migrate();
+                DbSeed.Seed(dbContext);
+            }
+        }
+
         private void ConfigureServices(IServiceCollection services)
         {
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddLogging();
             // --- 1. BANCO DE DADOS ---
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer("Data Source=(localdb)\\mssqllocaldb;Initial Catalog=Tesouraria;Integrated Security=True;TrustServerCertificate=True");
+                //options.UseSqlServer("Data Source=(localdb)\\mssqllocaldb;Initial Catalog=Tesouraria;Integrated Security=True;TrustServerCertificate=True");
+                options.UseSqlServer(connectionString);
             });
 
             // --- 2. REPOSITÓRIOS ---
@@ -87,8 +134,8 @@ namespace Tesouraria.Desktop
             services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
             // --- 4. SERVIÇOS DE APLICAÇÃO ---
-            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ILancamentoService, LancamentoService>();
+            services.AddTransient<IUsuarioService, UsuarioService>();
 
             // --- 5. VIEWMODELS ---
             services.AddTransient<LoginViewModel>();
@@ -104,6 +151,8 @@ namespace Tesouraria.Desktop
             services.AddTransient<CentroCustoCadastroViewModel>();
             services.AddTransient<CategoriaFinanceiraCadastroViewModel>();
             services.AddTransient<CategoriaFinanceiraListaViewModel>();
+            services.AddTransient<UsuarioCadastroViewModel>();
+            services.AddTransient<UsuarioListaViewModel>();
 
             // --- 6. VIEWS ---
             services.AddTransient<LoginWindow>();
@@ -120,6 +169,8 @@ namespace Tesouraria.Desktop
             services.AddTransient<CadastroCentroCustoFormWindow>();
             services.AddTransient<CadastroCategoriaFinanceiraWindow>();
             services.AddTransient<CadastroCategoriaFinanceiraFormWindow>();
+            services.AddTransient<CadastroUsuarioFormWindow>();
+            services.AddTransient<CadastroUsuarioWindow>();
         }
     }
 }

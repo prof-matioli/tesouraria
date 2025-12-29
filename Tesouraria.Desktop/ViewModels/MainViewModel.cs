@@ -1,27 +1,29 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Tesouraria.Application.DTOs;
 using Tesouraria.Application.Interfaces;
-using Tesouraria.Application.Services;
 using Tesouraria.Desktop.Core;
 using Tesouraria.Desktop.Views.Cadastros;
 using Tesouraria.Desktop.Views.Relatorios;
 using LiveCharts; // Namespace do LiveCharts
 using LiveCharts.Wpf; // Namespace do LiveCharts WPF
-using System.Collections.Generic;
-using System.Linq;
 using static Tesouraria.Application.DTOs.DashboardResumoDto;
+using Tesouraria.Desktop.Views;
 
 namespace Tesouraria.Desktop.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
         private readonly IServiceProvider _serviceProvider;
-        public string SaudacaoUsuario { get; set; }
         private readonly ILancamentoService _lancamentoService;
+        private string _saudacaoUsuario;
+        public string SaudacaoUsuario
+        {
+            get => _saudacaoUsuario;
+            set => SetProperty(ref _saudacaoUsuario, value);
+        }
 
         // --- Propriedades de Dados (Dashboard) ---
         private DashboardResumoDto _resumo;
@@ -47,16 +49,34 @@ namespace Tesouraria.Desktop.ViewModels
         public ICommand AbrirFornecedoresCommand { get; }
         public ICommand AbrirCentroCustoCommand { get; }
         public ICommand AbrirPlanoContasCommand { get; }
+        public ICommand AbrirUsuarioCommand { get; }
         public ICommand CarregarDadosCommand { get; }
         // Sistema
         public ICommand SairCommand { get; }
+
+        // 1. Propriedade para controlar visibilidade de itens de Admin
+        private bool _isAdministrador;
+        public bool IsAdministrador
+        {
+            get => _isAdministrador;
+            set => SetProperty(ref _isAdministrador, value);
+        }
+
+        // Exemplo: Propriedade para itens que só Tesoureiros e Admins veem
+        private bool _isTesourariaAcessivel;
+        public bool IsTesourariaAcessivel
+        {
+            get => _isTesourariaAcessivel;
+            set => SetProperty(ref _isTesourariaAcessivel, value);
+        }
 
         public MainViewModel(ILancamentoService lancamentoService, IServiceProvider serviceProvider)
         {
             _lancamentoService = lancamentoService;
             _serviceProvider = serviceProvider;
-            // Define a saudação
-            SaudacaoUsuario = $"Bem-vindo, {SessaoSistema.NomeUsuario}";
+
+            _resumo = new DashboardResumoDto();
+            LabelsGrafico = [];
 
             // Inicializa DTO vazio para não quebrar a UI antes de carregar
             Resumo = new DashboardResumoDto();
@@ -73,9 +93,10 @@ namespace Tesouraria.Desktop.ViewModels
             AbrirCentroCustoCommand = new RelayCommand(_ => AbrirJanela<CadastroCentroCustoWindow>());
             // Abre a lista de Categorias (Plano de Contas)
             AbrirPlanoContasCommand = new RelayCommand(_ => AbrirJanela<CadastroCategoriaFinanceiraWindow>());
+            AbrirUsuarioCommand = new RelayCommand(_ => AbrirJanela<CadastroUsuarioWindow>());
 
             // 4. Sair
-            SairCommand = new RelayCommand(_ => System.Windows.Application.Current.Shutdown());
+            SairCommand = new RelayCommand(_ => FecharJanela<MainWindow>());
 
             CarregarDadosCommand = new RelayCommand(async _ => await CarregarDashboard());
 
@@ -87,6 +108,75 @@ namespace Tesouraria.Desktop.ViewModels
 
             // Inicializa vazio para não quebrar a View
             SeriesGrafico = new SeriesCollection();
+
+            //CarregarDadosUsuario();
+
+            CarregarPermissoes();
+        }
+
+        private void CarregarPermissoes()
+        {
+            if (SessaoSistema.UsuarioLogado != null)
+            {
+                // 1. Verificação de Segurança para evitar erro se o Perfil vier nulo
+                var nomePerfil = SessaoSistema.UsuarioLogado.Perfil;
+
+                if (string.IsNullOrEmpty(nomePerfil))
+                {
+                    // Se chegou aqui, o problema é no Repositório (Passo 2)
+                    // Vamos forçar false para não quebrar
+                    IsAdministrador = false;
+                    IsTesourariaAcessivel = false;
+                    System.Windows.MessageBox.Show("Erro: O perfil do usuário não foi carregado do banco.");
+                    return;
+                }
+
+                nomePerfil = nomePerfil.ToLower().Trim(); // Converte para minúsculo e remove espaços
+
+                // 2. Lógica mais flexível (aceita "admin", "administrador", "administrator")
+                IsAdministrador = nomePerfil.Contains("admin");
+
+                // Tesouraria: Admin OU Tesoureiro
+                IsTesourariaAcessivel = IsAdministrador || nomePerfil.Contains("tesour");
+
+                SaudacaoUsuario = $"Logado como [{SessaoSistema.UsuarioLogado.Nome}]";
+            }
+            else
+            {
+                IsAdministrador = false;
+                IsTesourariaAcessivel = false;
+                SaudacaoUsuario = "Visitante";
+            }
+        }
+        private void CarregarDadosUsuario()
+        {
+            if (SessaoSistema.UsuarioLogado != null)
+            {
+                // Pega o nome real do DTO
+                SaudacaoUsuario = $"Olá {SessaoSistema.UsuarioLogado.Nome},\n seja bem vindo!";
+
+            }
+            else
+            {
+                // Fallback caso abra a tela sem logar (desenvolvimento)
+                SaudacaoUsuario = "Usuário";
+            }
+        }
+        private void FecharJanela<TWindow>() where TWindow : Window
+        {
+            try
+            {
+                // Resolve a janela pelo container de DI (garante que o VM dela também seja injetado)
+                //var janela = _serviceProvider.GetRequiredService<TWindow>();
+                //janela.Close();
+                System.Windows.Application.Current.Shutdown();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao fechar janela: {ex.Message}\nVerifique se ela foi registrada no App.xaml.cs");
+            }
+
         }
 
         private async Task CarregarDashboard()
