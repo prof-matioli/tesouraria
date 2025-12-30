@@ -15,6 +15,7 @@ namespace Tesouraria.Desktop.ViewModels
     {
         private readonly ILancamentoService _lancamentoService;
         private readonly IRepository<CentroCusto> _centroCustoRepo;
+        private readonly RelatorioPdfService _pdfService;
 
         // Filtros
         public DateTime DataInicio { get; set; } = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -37,10 +38,13 @@ namespace Tesouraria.Desktop.ViewModels
         // Comandos
         public ICommand GerarCommand { get; }
 
-        public RelatorioViewModel(ILancamentoService lancamentoService, IRepository<CentroCusto> centroCustoRepo)
+        public RelatorioViewModel(ILancamentoService lancamentoService, 
+                                  IRepository<CentroCusto> centroCustoRepo,
+                                  RelatorioPdfService pdfService)
         {
             _lancamentoService = lancamentoService;
             _centroCustoRepo = centroCustoRepo;
+            _pdfService = pdfService;
 
             GerarCommand = new RelayCommand(async _ => await GerarRelatorio());
             CarregarListas();
@@ -78,10 +82,10 @@ namespace Tesouraria.Desktop.ViewModels
                 }
 
                 // Gera o PDF
-                var pdfService = new RelatorioPdfService();
+                // Gera o PDF usando a instância injetada, não mais 'new'
                 string caminho = Path.Combine(Path.GetTempPath(), $"Relatorio_Caixa_{DateTime.Now:HHmmss}.pdf");
 
-                pdfService.GerarPdf(dados, filtro, caminho);
+                _pdfService.GerarPdf(dados, filtro, caminho);
             }
             catch (Exception ex)
             {
