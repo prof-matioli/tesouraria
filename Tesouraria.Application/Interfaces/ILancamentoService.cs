@@ -6,7 +6,7 @@ namespace Tesouraria.Application.Interfaces
 {
     public interface ILancamentoService
     {
-        Task<IEnumerable<LancamentoDto>> ObterTodosAsync(DateTime inicio, DateTime fim);
+        Task<IEnumerable<LancamentoDto>> ObterTodosAsync(DateTime inicio, DateTime fim, bool incluirCancelados);
         Task<LancamentoDto?> ObterPorIdAsync(int id);
         Task<int> RegistrarAsync(CriarLancamentoDto dto);
         Task BaixarAsync(BaixarLancamentoDto dto);

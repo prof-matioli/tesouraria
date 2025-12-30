@@ -25,6 +25,8 @@ namespace Tesouraria.Application.DTOs
         public string CategoriaNome { get; set; } = string.Empty;
         public string CentroCustoNome { get; set; } = string.Empty;
         public string? PessoaNome { get; set; }
+
+        public bool FiltrarPorDataPagamento { get; set; }
     }
 
     // As outras classes (CriarLancamentoDto, BaixarLancamentoDto) permanecem iguais

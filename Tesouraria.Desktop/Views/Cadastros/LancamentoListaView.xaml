@@ -29,6 +29,12 @@
                 <DatePicker SelectedDate="{Binding DataFim}" Width="120" Margin="0,0,20,0" VerticalContentAlignment="Center"/>
 
                 <Button Content="🔍 Filtrar" Command="{Binding BuscarCommand}" Width="100" Height="30"/>
+
+                <CheckBox Content="Exibir Cancelados" 
+                  IsChecked="{Binding ExibirCancelados}" 
+                  VerticalAlignment="Center" 
+                  Margin="20,0,0,0"
+                  FontSize="14"/>
             </StackPanel>
         </Border>
 
@@ -43,6 +49,17 @@
                   BorderThickness="1"
                   BorderBrush="#DDDDDD">
 
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Cancelado}" Value="True">
+                            <Setter Property="Foreground" Value="Red"/>
+                            <Setter Property="FontStyle" Value="Italic"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+            
             <DataGrid.Resources>
                 <Style TargetType="DataGridColumnHeader">
                     <Setter Property="Padding" Value="10,5"/>

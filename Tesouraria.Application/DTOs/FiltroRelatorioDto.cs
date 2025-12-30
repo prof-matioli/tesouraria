@@ -10,5 +10,8 @@ namespace Tesouraria.Application.DTOs
         public int? CentroCustoId { get; set; }
         public TipoTransacao? Tipo { get; set; } // Null = Todos
         public bool ApenasPagos { get; set; } = true; // Geralmente fluxo de caixa é só o realizado
+        public bool IncluirCancelados { get; set; } = false;
+
+        public bool FiltrarPorDataPagamento { get; set; }
     }
 }

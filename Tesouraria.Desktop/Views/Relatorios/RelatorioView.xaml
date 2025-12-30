@@ -25,7 +25,9 @@
                     <DatePicker SelectedDate="{Binding DataFim}"/>
                 </StackPanel>
             </Grid>
-
+            <Grid Margin="0,0,0,15">
+                <CheckBox Content="Filtrar pela Data do Pagamento" IsChecked="{Binding FiltrarPorPagamento}" />
+            </Grid>
             <TextBlock Text="Filtrar por Centro de Custo:" Margin="0,0,0,5"/>
             <ComboBox ItemsSource="{Binding CentrosCusto}" 
                       DisplayMemberPath="Nome" 

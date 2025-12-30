@@ -9,7 +9,7 @@ namespace Tesouraria.Domain.Interfaces
         Task AtualizarAsync(Lancamento lancamento);
 
         // Métodos específicos para consultas financeiras
-        Task<IEnumerable<Lancamento>> ObterPorPeriodoAsync(DateTime inicio, DateTime fim);
+        Task<IEnumerable<Lancamento>> ObterPorPeriodoAsync(DateTime inicio, DateTime fim, bool incluirCancelados);
         Task<decimal> ObterTotalPorPeriodoETipoAsync(DateTime inicio, DateTime fim, TipoTransacao tipo);
         Task<decimal> ObterTotalPrevistoAsync(DateTime inicio, DateTime fim, TipoTransacao tipo);
         // Commit (caso não esteja usando UnitOfWork separado)
@@ -20,7 +20,9 @@ namespace Tesouraria.Domain.Interfaces
             DateTime fim,
             int? centroCustoId,
             TipoTransacao? tipo,
-            bool apenasPagos);
+            bool apenasPagos,
+            bool incluirCancelados,
+            bool filtrarPorPagamento);
 
         // Método específico para trazer dados completos (com Includes)
         new Task<IEnumerable<Lancamento>> GetAllAsync();

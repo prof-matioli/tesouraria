@@ -23,6 +23,17 @@ namespace Tesouraria.Desktop.ViewModels
         public ObservableCollection<CentroCusto> CentrosCusto { get; } = new();
         public int? CentroCustoId { get; set; } // Null = Todos
 
+        private bool _filtrarPorPagamento;
+        public bool FiltrarPorPagamento
+        {
+            get => _filtrarPorPagamento;
+            set
+            {
+                _filtrarPorPagamento = value;
+                OnPropertyChanged(nameof(FiltrarPorPagamento));
+            }
+        }
+
         // Comandos
         public ICommand GerarCommand { get; }
 
@@ -53,7 +64,9 @@ namespace Tesouraria.Desktop.ViewModels
                     DataInicio = DataInicio,
                     DataFim = DataFim,
                     CentroCustoId = CentroCustoId == 0 ? null : CentroCustoId,
-                    ApenasPagos = true // Fluxo de Caixa Padrão
+                    ApenasPagos = true,
+                    IncluirCancelados = false,
+                    FiltrarPorDataPagamento = FiltrarPorPagamento
                 };
 
                 var dados = await _lancamentoService.GerarRelatorioAsync(filtro);

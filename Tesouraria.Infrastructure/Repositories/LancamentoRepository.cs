@@ -34,15 +34,26 @@ namespace Tesouraria.Infrastructure.Repositories
             return Task.CompletedTask; // O EF Core rastreia mudanças, o update é marcado no contexto
         }
 
-        public async Task<IEnumerable<Lancamento>> ObterPorPeriodoAsync(DateTime inicio, DateTime fim)
+        public async Task<IEnumerable<Lancamento>> ObterPorPeriodoAsync(DateTime inicio, DateTime fim, bool incluirCancelados)
         {
-            return await _context.Lancamento
-                .AsNoTracking() // Performance para leitura
+            // 1. Inicia a construção da query (ainda não vai ao banco)
+            var query = _context.Lancamento
+                .AsNoTracking()
                 .Include(l => l.Categoria)
                 .Include(l => l.CentroCusto)
                 .Include(l => l.Fiel)
                 .Include(l => l.Fornecedor)
-                .Where(l => l.DataVencimento >= inicio && l.DataVencimento <= fim)
+                .Where(l => l.DataVencimento >= inicio && l.DataVencimento <= fim);
+
+            // 2. Aplica o filtro de cancelados apenas se o usuário NÃO quiser vê-los
+            if (!incluirCancelados)
+            {
+                // Filtra tudo que for DIFERENTE de Cancelado (Status 2)
+                query = query.Where(l => l.Status != StatusLancamento.Cancelado);
+            }
+
+            // 3. Ordena e Executa a consulta final
+            return await query
                 .OrderBy(l => l.DataVencimento)
                 .ToListAsync();
         }
@@ -78,7 +89,9 @@ namespace Tesouraria.Infrastructure.Repositories
                                     DateTime fim,
                                     int? centroCustoId,
                                     TipoTransacao? tipo,
-                                    bool apenasPagos)
+                                    bool apenasPagos,
+                                    bool incluirCancelados,
+                                    bool filtrarPorPagamento)
         {
             var query = _context.Lancamento
                 .AsNoTracking() // Importante para performance de relatório
@@ -88,18 +101,26 @@ namespace Tesouraria.Infrastructure.Repositories
                 .Include(l => l.Fornecedor)
                 .AsQueryable();
 
-            // Filtro de Datas e Status
-            if (apenasPagos)
+            if (filtrarPorPagamento)
             {
-                query = query.Where(l => l.Status == StatusLancamento.Pago
-                                         && l.DataPagamento >= inicio
-                                         && l.DataPagamento <= fim);
+                // Se marcado, filtra onde a DataPagamento está no intervalo
+                // Importante: DataPagamento pode ser null, então o filtro já exclui não pagos implicitamente
+                query = query.Where(l => l.DataPagamento >= inicio && l.DataPagamento <= fim);
             }
             else
             {
-                query = query.Where(l => l.Status != StatusLancamento.Cancelado
-                                         && l.DataVencimento >= inicio
-                                         && l.DataVencimento <= fim);
+                // Se desmarcado (Padrão), filtra pela DataVencimento
+                query = query.Where(l => l.DataVencimento >= inicio && l.DataVencimento <= fim);
+            }
+
+            // Filtro de Datas e Status
+            if (apenasPagos)
+            {
+                query = query.Where(l => l.Status == StatusLancamento.Pago);
+            }
+            else
+            {
+                query = query.Where(l => l.Status != StatusLancamento.Cancelado);
             }
 
             // Filtro de Centro de Custo
@@ -114,11 +135,17 @@ namespace Tesouraria.Infrastructure.Repositories
                 query = query.Where(l => l.Tipo == tipo.Value);
             }
 
+            if (incluirCancelados)
+                query = query.OrderBy(l => l.Status == StatusLancamento.Cancelado);
+
             // Ordenação
             if (apenasPagos)
                 return await query.OrderBy(l => l.DataPagamento).ToListAsync();
             else
                 return await query.OrderBy(l => l.DataVencimento).ToListAsync();
+
+ 
+
         }
 
         public async Task<IEnumerable<Lancamento>> GetAllAsync()

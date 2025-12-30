@@ -70,6 +70,19 @@ namespace Tesouraria.Desktop.ViewModels
             set => SetProperty(ref _saldoPeriodo, value);
         }
 
+        private bool _exibirCancelados;
+        public bool ExibirCancelados
+        {
+            get => _exibirCancelados;
+            set
+            {
+                if (SetProperty(ref _exibirCancelados, value))
+                {
+                    // SE O VALOR MUDAR, RECARREGA A LISTA AUTOMATICAMENTE
+                    _ = BuscarAsync();
+                }
+            }
+        }
 
         // CONSTRUTOR
         public LancamentoListaViewModel(
@@ -90,7 +103,7 @@ namespace Tesouraria.Desktop.ViewModels
             BaixarCommand = new RelayCommand(async _ => await BaixarAsync(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pendente);
             CancelarCommand = new RelayCommand(async _ => await CancelarAsync(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status != StatusLancamento.Cancelado);
 
-            EditarCommand = new RelayCommand(async _ => await EditarLancamento(), _ => LancamentoSelecionado != null);
+            EditarCommand = new RelayCommand(async _ => await EditarLancamento(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status != StatusLancamento.Cancelado);
 
             EstornarCommand = new RelayCommand(async _ => await EstornarLancamento(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pago);
 
@@ -102,7 +115,7 @@ namespace Tesouraria.Desktop.ViewModels
         {
             try
             {
-                var dados = await _lancamentoService.ObterTodosAsync(DataInicio, DataFim);
+                var dados = await _lancamentoService.ObterTodosAsync(DataInicio, DataFim, ExibirCancelados);
                 Lancamentos.Clear();
                 foreach (var item in dados)
                 {

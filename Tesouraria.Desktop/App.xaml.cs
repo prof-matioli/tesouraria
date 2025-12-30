@@ -122,19 +122,20 @@ namespace Tesouraria.Desktop
             {
                 //options.UseSqlServer("Data Source=(localdb)\\mssqllocaldb;Initial Catalog=Tesouraria;Integrated Security=True;TrustServerCertificate=True");
                 options.UseSqlServer(connectionString);
-            });
+            },ServiceLifetime.Transient);
 
             // --- 2. REPOSITÓRIOS ---
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<ILancamentoRepository, LancamentoRepository>();
-            services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+            services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+            services.AddTransient<ILancamentoRepository, LancamentoRepository>();
+            services.AddTransient<IUsuarioRepository, UsuarioRepository>();
+
 
             // --- 3. AUTO MAPPER ---
             // Corrigido para usar o método correto que aceita um tipo
             services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
             // --- 4. SERVIÇOS DE APLICAÇÃO ---
-            services.AddScoped<ILancamentoService, LancamentoService>();
+            services.AddTransient<ILancamentoService, LancamentoService>();
             services.AddTransient<IUsuarioService, UsuarioService>();
 
             // --- 5. VIEWMODELS ---

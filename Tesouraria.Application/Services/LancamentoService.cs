@@ -32,7 +32,9 @@ namespace Tesouraria.Application.Services
                 filtro.DataFim,
                 filtro.CentroCustoId,
                 filtro.Tipo,
-                filtro.ApenasPagos
+                filtro.ApenasPagos,
+                filtro.IncluirCancelados,
+                filtro.FiltrarPorDataPagamento
             );
 
             // Faz o Mapeamento para DTO
@@ -51,6 +53,7 @@ namespace Tesouraria.Application.Services
                 PessoaNome = l.Tipo == TipoTransacao.Receita ? (l.Fiel?.Nome) : (l.Fornecedor?.NomeFantasia)
             });
         }
+
         public async Task<decimal> ObterSaldoPrevistoAsync(DateTime inicio, DateTime fim)
         {
             var receitas = await _lancamentoRepository.ObterTotalPrevistoAsync(inicio, fim, TipoTransacao.Receita);
@@ -59,9 +62,9 @@ namespace Tesouraria.Application.Services
             return receitas - despesas;
         }
 
-        public async Task<IEnumerable<LancamentoDto>> ObterTodosAsync(DateTime inicio, DateTime fim)
+        public async Task<IEnumerable<LancamentoDto>> ObterTodosAsync(DateTime inicio, DateTime fim, bool incluirCancelados)
         {
-            var lancamentos = await _lancamentoRepository.ObterPorPeriodoAsync(inicio, fim);
+            var lancamentos = await _lancamentoRepository.ObterPorPeriodoAsync(inicio, fim, incluirCancelados);
 
             return lancamentos.Select(l => new LancamentoDto
             {
