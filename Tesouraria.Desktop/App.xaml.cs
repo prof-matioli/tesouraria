@@ -159,8 +159,8 @@ namespace Tesouraria.Desktop
             services.AddTransient<CentroCustoListaView>();
             services.AddTransient<CadastroCentroCustoFormWindow>();
             services.AddTransient<CadastroCategoriaFinanceiraFormWindow>();
-            services.AddTransient<CadastroUsuarioFormWindow>();
-            services.AddTransient<CadastroUsuarioWindow>();
+            services.AddTransient<UsuarioCadastroView>();
+            services.AddTransient<UsuarioListaView>();
         }
     }
 }

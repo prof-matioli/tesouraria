@@ -48,6 +48,11 @@
             <rel:RelatorioView />
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type vm:UsuarioListaViewModel}">
+            <cad:UsuarioListaView />
+        </DataTemplate>
+
+
         <Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="45"/>
             <Setter Property="Background" Value="Transparent"/>

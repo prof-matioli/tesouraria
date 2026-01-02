@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Tesouraria.Desktop.Views.Cadastros.LancamentoCadastroView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="{Binding TituloJanela}" Height="570" Width="450"
+        Title="{Binding TituloJanela}" Height="637" Width="450"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Background="#F4F6F7">
 
@@ -15,7 +15,7 @@
         </Style>
     </Window.Resources>
 
-    <Border Padding="20">
+    <Border Padding="20" Margin="0,0,0,3">
         <StackPanel Margin="0,0,0,-10">
             <TextBlock Text="{Binding TituloJanela}" FontSize="20" FontWeight="Bold" 
                        Foreground="#2C3E50" HorizontalAlignment="Center" Margin="0,0,0,20"/>
@@ -46,12 +46,18 @@
                     <TextBlock Text="Valor (R$):" FontWeight="Medium"/>
                     <TextBox Text="{Binding Entity.Valor, StringFormat=N2}" Style="{StaticResource InputStyle}"/>
                 </StackPanel>
-
+                
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="Vencimento:" FontWeight="Medium"/>
                     <DatePicker SelectedDate="{Binding Entity.DataVencimento}" Height="30" Margin="0,5,0,15"/>
                 </StackPanel>
             </Grid>
+
+            <TextBlock Text="Forma de Pagamento:" FontWeight="Medium"/>
+            <ComboBox ItemsSource="{Binding FormasPagamento}"
+                      SelectedItem="{Binding Entity.FormaPagamento}"
+                      Style="{StaticResource InputStyle}"/>
+
 
             <TextBlock Text="Categoria Financeira:" FontWeight="Medium"/>
             <ComboBox ItemsSource="{Binding CategoriasFiltradas}"

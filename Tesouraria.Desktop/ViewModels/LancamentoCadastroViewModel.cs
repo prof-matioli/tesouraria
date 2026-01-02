@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using Tesouraria.Application.DTOs;
@@ -23,6 +19,10 @@ namespace Tesouraria.Desktop.ViewModels
         private readonly IRepository<Fornecedor> _fornecedorRepo;
 
         public event EventHandler? RequestClose;
+
+        // Lista para preencher o ComboBox
+        public IEnumerable<FormaPagamento> FormasPagamento =>
+            Enum.GetValues(typeof(FormaPagamento)).Cast<FormaPagamento>();
 
         private CriarLancamentoDto _entity;
         public CriarLancamentoDto Entity
@@ -94,7 +94,11 @@ namespace Tesouraria.Desktop.ViewModels
             _fornecedorRepo = fornecedorRepo;
 
             // ALTERAÇÃO AQUI: Padrão agora é Receita
-            Entity = new CriarLancamentoDto { DataVencimento = DateTime.Now, Tipo = TipoTransacao.Receita };
+            Entity = new CriarLancamentoDto { 
+                DataVencimento = DateTime.Now, 
+                Tipo = TipoTransacao.Receita ,
+                FormaPagamento = FormaPagamento.Dinheiro
+            };
 
             SalvarCommand = new RelayCommand(async _ => await Salvar());
             FecharCommand = new RelayCommand(_ => RequestClose?.Invoke(this, EventArgs.Empty));
@@ -116,6 +120,7 @@ namespace Tesouraria.Desktop.ViewModels
                     {
                         DataVencimento = DateTime.Now,
                         Tipo = TipoTransacao.Receita,
+                        FormaPagamento = FormaPagamento.Dinheiro,
                         UsuarioId = SessaoSistema.UsuarioLogado?.Id ?? 1
                     };
                 }
@@ -129,6 +134,7 @@ namespace Tesouraria.Desktop.ViewModels
                             Descricao = dto.Descricao,
                             Valor = dto.ValorOriginal,
                             DataVencimento = dto.DataVencimento,
+                            FormaPagamento = dto.FormaPagamento,
                             Tipo = dto.Tipo,
                             Observacao = dto.Observacao,
                             CategoriaId = dto.CategoriaId,
@@ -164,6 +170,7 @@ namespace Tesouraria.Desktop.ViewModels
             Fornecedores.Clear();
             var forns = await _fornecedorRepo.GetAllAsync();
             foreach (var f in forns) Fornecedores.Add(f);
+
         }
 
         private void FiltrarCategorias()

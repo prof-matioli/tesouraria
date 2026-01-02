@@ -10,6 +10,8 @@ namespace Tesouraria.Domain.Entities
         public decimal ValorPago { get; private set; } // Valor final com juros/multa/desconto
         public DateTime DataVencimento { get; private set; }
         public DateTime? DataPagamento { get; private set; } // Data da Baixa
+        public FormaPagamento FormaPagamento { get; set; }
+
         public string? Observacao { get; private set; }
 
         public TipoTransacao Tipo { get; private set; }
@@ -108,6 +110,7 @@ namespace Tesouraria.Domain.Entities
             string descricao,
             decimal valor,
             DateTime dataVencimento,
+            FormaPagamento formaPagamento,
             TipoTransacao tipo,
             int categoriaId,
             int centroCustoId,
@@ -127,6 +130,7 @@ namespace Tesouraria.Domain.Entities
             // mas por segurança mantemos o original atualizado.
 
             DataVencimento = dataVencimento;
+            FormaPagamento = formaPagamento;
             Tipo = tipo;
             CategoriaId = categoriaId;
             CentroCustoId = centroCustoId;

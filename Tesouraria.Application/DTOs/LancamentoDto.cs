@@ -27,6 +27,8 @@ namespace Tesouraria.Application.DTOs
         public string? PessoaNome { get; set; }
 
         public bool FiltrarPorDataPagamento { get; set; }
+        public FormaPagamento FormaPagamento { get; set; }
+
     }
 
     // As outras classes (CriarLancamentoDto, BaixarLancamentoDto) permanecem iguais
@@ -36,6 +38,10 @@ namespace Tesouraria.Application.DTOs
         public decimal Valor { get; set; }
         public DateTime DataVencimento { get; set; }
         public TipoTransacao Tipo { get; set; }
+
+        // NOVO CAMPO (Obrigatório na criação pois já nasce pago)
+        public FormaPagamento FormaPagamento { get; set; }
+
         public int CategoriaId { get; set; }
         public int CentroCustoId { get; set; }
         public int UsuarioId { get; set; }
@@ -49,5 +55,7 @@ namespace Tesouraria.Application.DTOs
         public int LancamentoId { get; set; }
         public decimal ValorPago { get; set; }
         public DateTime DataPagamento { get; set; }
+        // NOVO CAMPO (Caso mude a forma na hora de baixar)
+        public FormaPagamento FormaPagamento { get; set; }
     }
 }

@@ -41,6 +41,9 @@ namespace Tesouraria.Application.Services
                 dto.FornecedorId
             );
 
+            // Salva a forma de pagamento na entidade (assumindo que você criou a prop na Entidade)
+            lancamento.FormaPagamento = dto.FormaPagamento;
+
             // =========================================================================
             // ALTERAÇÃO SOLICITADA: O lançamento já nasce PAGO.
             // Assumimos que a Data do Pagamento é a mesma do Vencimento/Registro
@@ -71,6 +74,7 @@ namespace Tesouraria.Application.Services
                 ValorPago = l.ValorPago,
                 DataVencimento = l.DataVencimento,
                 DataPagamento = l.DataPagamento,
+                FormaPagamento = l.FormaPagamento,
                 Tipo = l.Tipo,
                 Status = l.Status,
                 CategoriaNome = l.Categoria?.Nome ?? "",
@@ -83,6 +87,9 @@ namespace Tesouraria.Application.Services
         {
             var lancamento = await _lancamentoRepository.ObterPorIdAsync(dto.LancamentoId);
             if (lancamento == null) throw new Exception("Lançamento não encontrado.");
+
+            // Atualiza a forma de pagamento no momento da baixa
+            lancamento.FormaPagamento = dto.FormaPagamento;
 
             lancamento.Baixar(dto.ValorPago, dto.DataPagamento);
 
@@ -123,9 +130,19 @@ namespace Tesouraria.Application.Services
                 throw new Exception("O tipo da Categoria não corresponde ao tipo do Lançamento.");
 
             lancamento.AtualizarDados(
-                dto.Descricao, dto.Valor, dto.DataVencimento, dto.Tipo,
-                dto.CategoriaId, dto.CentroCustoId, dto.FielId, dto.FornecedorId, dto.Observacao
+                dto.Descricao, 
+                dto.Valor, 
+                dto.DataVencimento, 
+                dto.FormaPagamento,
+                dto.Tipo,
+                dto.CategoriaId, 
+                dto.CentroCustoId, 
+                dto.FielId, 
+                dto.FornecedorId, 
+                dto.Observacao
             );
+
+            lancamento.FormaPagamento = dto.FormaPagamento;
 
             await _lancamentoRepository.AtualizarAsync(lancamento);
             await _lancamentoRepository.CommitAsync();
@@ -144,6 +161,7 @@ namespace Tesouraria.Application.Services
                 ValorPago = l.ValorPago,
                 DataVencimento = l.DataVencimento,
                 DataPagamento = l.DataPagamento,
+                FormaPagamento = l.FormaPagamento, 
                 Tipo = l.Tipo,
                 Status = l.Status,
                 Observacao = l.Observacao,
@@ -218,6 +236,7 @@ namespace Tesouraria.Application.Services
                 ValorPago = l.ValorPago,
                 DataVencimento = l.DataVencimento,
                 DataPagamento = l.DataPagamento,
+                FormaPagamento = l.FormaPagamento, 
                 Tipo = l.Tipo,
                 Status = l.Status,
                 CategoriaNome = l.Categoria?.Nome ?? "N/A",
