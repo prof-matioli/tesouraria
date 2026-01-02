@@ -110,6 +110,7 @@ namespace Tesouraria.Desktop
             services.AddTransient<ILancamentoRepository, LancamentoRepository>();
             services.AddTransient<IUsuarioRepository, UsuarioRepository>();
             services.AddTransient<ICentroCustoRepository, CentroCustoRepository>(); // Caso tenha criado repositório específico
+            services.AddTransient<IFielRepository, FielRepository>(); // Caso tenha criado repositório específico
 
             // --- 3. AUTO MAPPER ---
             services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
@@ -127,6 +128,7 @@ namespace Tesouraria.Desktop
             services.AddTransient<MainViewModel>();
             services.AddTransient<LancamentoListaViewModel>();
             services.AddTransient<LancamentoCadastroViewModel>();
+            services.AddTransient<DashboardViewModel>();
 
             // O RelatorioViewModel agora receberá (ILancamentoService, IRepository<CentroCusto>, RelatorioPdfService)
             services.AddTransient<RelatorioViewModel>();
@@ -148,12 +150,13 @@ namespace Tesouraria.Desktop
             services.AddTransient<LancamentoListaView>();
             services.AddTransient<LancamentoCadastroView>();
             services.AddTransient<RelatorioView>();
-            services.AddTransient<CadastroCategoriaFinanceiraWindow>();
-            services.AddTransient<CadastroFielWindow>();
+            services.AddTransient<DashboardViewModel>();
+            services.AddTransient<CategoriaFinanceiraListaView>();
+            services.AddTransient<FielListaView>();
             services.AddTransient<CadastroFielFormWindow>();
-            services.AddTransient<CadastroFornecedorWindow>();
+            services.AddTransient<FornecedorListaView>();
             services.AddTransient<CadastroFornecedorFormWindow>();
-            services.AddTransient<CadastroCentroCustoWindow>();
+            services.AddTransient<CentroCustoListaView>();
             services.AddTransient<CadastroCentroCustoFormWindow>();
             services.AddTransient<CadastroCategoriaFinanceiraFormWindow>();
             services.AddTransient<CadastroUsuarioFormWindow>();

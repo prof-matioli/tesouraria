@@ -1,269 +1,208 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Tesouraria.Application.DTOs;
 using Tesouraria.Application.Interfaces;
-using Tesouraria.Domain.Entities; // Para acessar as listas de entidades simples
+using Tesouraria.Desktop.Core;
+using Tesouraria.Domain.Entities;
+using Tesouraria.Domain.Enums;
 using Tesouraria.Domain.Interfaces;
-using Tesouraria.Desktop.Core; 
 
 namespace Tesouraria.Desktop.ViewModels
 {
     public class LancamentoCadastroViewModel : ViewModelBase
     {
         private readonly ILancamentoService _lancamentoService;
-        // Dependências para carregar os combos (supondo repositórios genéricos ou services específicos)
-        private readonly IRepository<CentroCusto> _centroCustoRepo;
         private readonly IRepository<CategoriaFinanceira> _categoriaRepo;
+        private readonly IRepository<CentroCusto> _centroCustoRepo;
         private readonly IRepository<Fiel> _fielRepo;
         private readonly IRepository<Fornecedor> _fornecedorRepo;
 
-        private int _idEdicao = 0;
-        public bool ModoEdicao => _idEdicao > 0; // Útil se quiser mudar o título da janela via Binding
+        public event EventHandler? RequestClose;
 
-        // Propriedades de Binding
-        private CriarLancamentoDto _dto;
-
-        // Listas para ComboBoxes
-        public ObservableCollection<CentroCusto> CentrosCusto { get; } = new();
-        public ObservableCollection<CategoriaFinanceira> CategoriasFiltradas { get; } = new();
-        public ObservableCollection<Fiel> Fieis { get; } = new();
-        //public ObservableCollection<Fornecedor> Fornecedores { get; } = new();
-        public ObservableCollection<Fornecedor> Fornecedores { get; } = new ObservableCollection<Fornecedor>();
-        // Controle de Tela
-        private bool _isReceita;
-
-
-        public LancamentoCadastroViewModel(
-            ILancamentoService lancamentoService,
-            IRepository<CentroCusto> centroCustoRepo,
-            IRepository<CategoriaFinanceira> categoriaRepo,
-            IRepository<Fiel> fielRepo,
-            IRepository<Fornecedor> fornecedorRepo)
+        private CriarLancamentoDto _entity;
+        public CriarLancamentoDto Entity
         {
-                    _lancamentoService = lancamentoService;
-                    _centroCustoRepo = centroCustoRepo;
-                    _categoriaRepo = categoriaRepo;
-                    _fielRepo = fielRepo;
-                    _fornecedorRepo = fornecedorRepo;
-
-                    // Inicializa DTO com valores padrão
-                    Dto = new CriarLancamentoDto
-                    {
-                        DataVencimento = DateTime.Today,
-                        Tipo = TipoTransacao.Despesa // Padrão inicial
-                    };
-
-                    IsDespesa = true;
-                    IsReceita = false;
-
-                    SalvarCommand = new RelayCommand(async _ => await SalvarAsync());
-                    FecharCommand = new RelayCommand(_ => RequestClose?.Invoke());
-        }
-
-        public CriarLancamentoDto Dto
-        {
-            get => _dto;
-            set { _dto = value; OnPropertyChanged(); }
-        }
-
-        public bool IsReceita
-        {
-            get => _isReceita;
+            get => _entity;
             set
             {
-                if (SetProperty(ref _isReceita, value))
+                SetProperty(ref _entity, value);
+                OnPropertyChanged(nameof(TipoSelecionado));
+                OnPropertyChanged(nameof(IsReceita));
+                OnPropertyChanged(nameof(IsDespesa));
+            }
+        }
+
+        private List<CategoriaFinanceira> _todasCategorias = new();
+        public ObservableCollection<CategoriaFinanceira> CategoriasFiltradas { get; } = new();
+        public ObservableCollection<CentroCusto> CentrosCusto { get; } = new();
+        public ObservableCollection<Fiel> Fieis { get; } = new();
+        public ObservableCollection<Fornecedor> Fornecedores { get; } = new();
+
+        private int _idEdicao = 0;
+        public string TituloJanela => _idEdicao == 0 ? "Novo Lançamento" : "Editar Lançamento";
+
+        public TipoTransacao TipoSelecionado
+        {
+            get => Entity.Tipo;
+            set
+            {
+                if (Entity.Tipo != value)
                 {
-                    // 1. Atualiza o tipo no DTO
-                    Dto.Tipo = value ? TipoTransacao.Receita : TipoTransacao.Despesa;
+                    Entity.Tipo = value;
+                    OnPropertyChanged(nameof(TipoSelecionado));
+                    OnPropertyChanged(nameof(IsReceita));
+                    OnPropertyChanged(nameof(IsDespesa));
 
-                    // 2. Atualiza o booleano inverso (para controle visual)
-                    IsDespesa = !value;
-
-                    // 3. Atualiza a lista de categorias disponíveis
                     FiltrarCategorias();
-
-                    // 4. IMPORTANTE: Limpa a seleção anterior para evitar erro de categoria incompatível
-                    // Só limpamos se estivermos mudando na tela (não durante o carregamento inicial)
-                    if (CategoriasFiltradas.All(c => c.Id != Dto.CategoriaId))
-                    {
-                        Dto.CategoriaId = 0;
-                        OnPropertyChanged(nameof(Dto)); // Avisa a tela para limpar o ComboBox
-                    }
+                    Entity.CategoriaId = 0;
+                    OnPropertyChanged(nameof(Entity));
                 }
             }
         }
 
-        private bool _isDespesa;
+        public bool IsReceita
+        {
+            get => TipoSelecionado == TipoTransacao.Receita;
+            set { if (value) TipoSelecionado = TipoTransacao.Receita; }
+        }
+
         public bool IsDespesa
         {
-            get => _isDespesa;
-            set => SetProperty(ref _isDespesa, value); // Apenas para controle de UI (Visibility)
+            get => TipoSelecionado == TipoTransacao.Despesa;
+            set { if (value) TipoSelecionado = TipoTransacao.Despesa; }
         }
 
-        // Cache de todas as categorias para evitar ir ao banco toda hora
-        private List<CategoriaFinanceira> _todasCategorias = new();
-
-        // Comandos
         public ICommand SalvarCommand { get; }
-        public ICommand FecharCommand { get; } // Associaremos ao fechamento da janela
+        public ICommand FecharCommand { get; }
 
-        // Action para fechar a janela via CodeBehind (padrão MVVM com Actions)
-        public Action? RequestClose { get; set; }
-
-        // MÉTODO NOVO: Chamado pela lista para preencher a tela
-        public async Task CarregarParaEdicaoAsync(int id)
+        public LancamentoCadastroViewModel(
+            ILancamentoService lancamentoService,
+            IRepository<CategoriaFinanceira> categoriaRepo,
+            IRepository<CentroCusto> centroCustoRepo,
+            IRepository<Fiel> fielRepo,
+            IRepository<Fornecedor> fornecedorRepo)
         {
-            var lancamento = await _lancamentoService.ObterPorIdAsync(id);
-            if (lancamento == null) return;
+            _lancamentoService = lancamentoService;
+            _categoriaRepo = categoriaRepo;
+            _centroCustoRepo = centroCustoRepo;
+            _fielRepo = fielRepo;
+            _fornecedorRepo = fornecedorRepo;
 
-            _idEdicao = lancamento.Id;
+            // ALTERAÇÃO AQUI: Padrão agora é Receita
+            Entity = new CriarLancamentoDto { DataVencimento = DateTime.Now, Tipo = TipoTransacao.Receita };
 
-            // Configura os booleans para a UI reagir (Visibilidade dos campos)
-            if (lancamento.Tipo == TipoTransacao.Receita)
-            {
-                IsReceita = true; // Isso dispara a lógica de filtrar categorias
-            }
-            else
-            {
-                IsDespesa = true;
-            }
-
-            // Preenche o DTO que está ligado aos campos da tela
-            Dto = new CriarLancamentoDto
-            {
-                Descricao = lancamento.Descricao,
-                Valor = lancamento.ValorOriginal,
-                DataVencimento = lancamento.DataVencimento,
-                Tipo = lancamento.Tipo,
-                CategoriaId = lancamento.CategoriaId,
-                CentroCustoId = lancamento.CentroCustoId,
-                FielId = lancamento.FielId,
-                FornecedorId = lancamento.FornecedorId,
-                Observacao = lancamento.Observacao,
-                UsuarioId = SessaoSistema.UsuarioId
-            };
-
-            // Força a notificação para a UI atualizar os Combos
-            OnPropertyChanged(nameof(Dto));
+            SalvarCommand = new RelayCommand(async _ => await Salvar());
+            FecharCommand = new RelayCommand(_ => RequestClose?.Invoke(this, EventArgs.Empty));
         }
 
-
-        public async Task CarregarListasAsync()
+        public async Task Carregar(int id)
         {
             try
             {
-                // Limpa as listas antes de carregar para evitar duplicação se chamado 2x
-                CentrosCusto.Clear();
-                CategoriasFiltradas.Clear();
-                _todasCategorias.Clear();
-                Fieis.Clear();
-                Fornecedores.Clear();
+                _idEdicao = id;
+                OnPropertyChanged(nameof(TituloJanela));
 
-                var custos = await _centroCustoRepo.GetAllAsync(); // Ajuste conforme seu repositório
-                foreach (var c in custos) CentrosCusto.Add(c);
+                await CarregarListasAuxiliares();
 
-                _todasCategorias = (await _categoriaRepo.GetAllAsync()).ToList();
+                if (id == 0)
+                {
+                    // ALTERAÇÃO AQUI: Novo lançamento inicia como Receita
+                    Entity = new CriarLancamentoDto
+                    {
+                        DataVencimento = DateTime.Now,
+                        Tipo = TipoTransacao.Receita,
+                        UsuarioId = SessaoSistema.UsuarioLogado?.Id ?? 1
+                    };
+                }
+                else
+                {
+                    var dto = await _lancamentoService.ObterPorIdAsync(id);
+                    if (dto != null)
+                    {
+                        Entity = new CriarLancamentoDto
+                        {
+                            Descricao = dto.Descricao,
+                            Valor = dto.ValorOriginal,
+                            DataVencimento = dto.DataVencimento,
+                            Tipo = dto.Tipo,
+                            Observacao = dto.Observacao,
+                            CategoriaId = dto.CategoriaId,
+                            CentroCustoId = dto.CentroCustoId,
+                            FielId = dto.FielId,
+                            FornecedorId = dto.FornecedorId,
+                            UsuarioId = SessaoSistema.UsuarioLogado?.Id ?? 1
+                        };
+                    }
+                }
+
                 FiltrarCategorias();
-
-                var fieis = await _fielRepo.GetAllAsync();
-                foreach (var f in fieis) Fieis.Add(f);
-
-                var fornecedores = await _fornecedorRepo.GetAllAsync();
-                foreach (var f in fornecedores) Fornecedores.Add(f);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao carregar listas: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao carregar: {ex.Message}");
             }
+        }
+
+        private async Task CarregarListasAuxiliares()
+        {
+            var cats = await _categoriaRepo.GetAllAsync();
+            _todasCategorias = cats.ToList();
+
+            CentrosCusto.Clear();
+            var custos = await _centroCustoRepo.GetAllAsync();
+            foreach (var c in custos) CentrosCusto.Add(c);
+
+            Fieis.Clear();
+            var fieis = await _fielRepo.GetAllAsync();
+            foreach (var f in fieis) Fieis.Add(f);
+
+            Fornecedores.Clear();
+            var forns = await _fornecedorRepo.GetAllAsync();
+            foreach (var f in forns) Fornecedores.Add(f);
         }
 
         private void FiltrarCategorias()
         {
             CategoriasFiltradas.Clear();
-            var tipoAlvo = IsReceita ? TipoTransacao.Receita : TipoTransacao.Despesa;
-
-            var filtradas = _todasCategorias.Where(c => c.Tipo == tipoAlvo).ToList();
-            foreach (var c in filtradas) CategoriasFiltradas.Add(c);
+            var filtradas = _todasCategorias.Where(c => c.Tipo == TipoSelecionado);
+            foreach (var cat in filtradas) CategoriasFiltradas.Add(cat);
         }
 
-        private async Task SalvarAsync()
+        private async Task Salvar()
         {
             try
             {
-                // 1. Validações Básicas de Interface
-                if (Dto.Valor <= 0)
-                {
-                    MessageBox.Show("O valor do lançamento deve ser maior que zero.", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                if (string.IsNullOrWhiteSpace(Entity.Descricao)) { MessageBox.Show("Informe a descrição."); return; }
+                if (Entity.Valor <= 0) { MessageBox.Show("O valor deve ser maior que zero."); return; }
+                if (Entity.CategoriaId <= 0) { MessageBox.Show("Selecione uma Categoria."); return; }
+                if (Entity.CentroCustoId <= 0) { MessageBox.Show("Selecione um Centro de Custo."); return; }
 
-                if (string.IsNullOrWhiteSpace(Dto.Descricao))
-                {
-                    MessageBox.Show("Por favor, informe uma descrição para o lançamento.", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                if (IsReceita) Entity.FornecedorId = null;
+                if (IsDespesa) Entity.FielId = null;
 
-                // Validação importante para evitar erro de FK (caso os combos não tenham carregado ou usuário não selecionou)
-                if (Dto.CategoriaId <= 0)
-                {
-                    MessageBox.Show("Selecione uma Categoria Financeira.", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                Entity.UsuarioId = SessaoSistema.UsuarioLogado?.Id ?? 1;
 
-                if (Dto.CentroCustoId <= 0)
-                {
-                    MessageBox.Show("Selecione um Centro de Custo.", "Atenção", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // 2. Validação de Segurança (Sessão)
-                // Isso resolve o erro "FK_Lancamentos_Usuarios" definitivamente
-                if (SessaoSistema.UsuarioId <= 0)
-                {
-                    MessageBox.Show("Sessão expirada ou usuário não identificado.\nPor favor, feche o sistema e faça login novamente.",
-                                    "Erro de Segurança", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                // Atribui o ID do usuário logado ao DTO
-                Dto.UsuarioId = SessaoSistema.UsuarioId;
-
-                // 3. Decisão: Inserir ou Atualizar
                 if (_idEdicao == 0)
                 {
-                    // --- MODO CRIAÇÃO ---
-                    await _lancamentoService.RegistrarAsync(Dto);
-                    MessageBox.Show("Lançamento registrado com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await _lancamentoService.RegistrarAsync(Entity);
+                    MessageBox.Show("Registrado com sucesso!");
                 }
                 else
                 {
-                    // --- MODO EDIÇÃO ---
-                    await _lancamentoService.AtualizarAsync(_idEdicao, Dto);
-                    MessageBox.Show("Lançamento atualizado com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await _lancamentoService.AtualizarAsync(_idEdicao, Entity);
+                    MessageBox.Show("Atualizado com sucesso!");
                 }
 
-                // 4. Fecha a janela
-                RequestClose?.Invoke();
+                RequestClose?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
-                // 5. Tratamento de Erro Robusto (Mostra a causa raiz do SQL Server)
-                var mensagemErro = ex.Message;
-
-                // Verifica se existe uma exceção interna (o erro real do banco)
-                if (ex.InnerException != null)
-                {
-                    mensagemErro += $"\n\nDetalhe Técnico: {ex.InnerException.Message}";
-
-                    // Às vezes o erro real está ainda mais fundo
-                    if (ex.InnerException.InnerException != null)
-                    {
-                        mensagemErro += $"\n\nRaiz do Problema: {ex.InnerException.InnerException.Message}";
-                    }
-                }
-
-                MessageBox.Show($"Ocorreu um erro ao salvar:\n{mensagemErro}", "Erro de Banco de Dados", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao salvar: {ex.Message}");
             }
         }
     }
