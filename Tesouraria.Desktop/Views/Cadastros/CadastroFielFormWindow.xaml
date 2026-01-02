@@ -1,0 +1,40 @@
+﻿<Window x:Class="Tesouraria.Desktop.Views.Cadastros.CadastroFielFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dados do Fiel" Height="517" Width="500"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Background="#F4F6F7">
+
+    <Border Margin="15" Background="White" CornerRadius="10" Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+                <RowDefinition Height="Auto" MinHeight="77.1"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Ficha Cadastral" FontSize="18" FontWeight="Bold" Foreground="#34495E" Margin="0,0,0,20"/>
+
+            <StackPanel Grid.Row="1" Margin="0,0,0,77" Grid.RowSpan="2">
+                <TextBlock Text="Nome Completo" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Entity.Nome, UpdateSourceTrigger=PropertyChanged}" Height="30" Margin="0,0,0,10"/>
+
+                <TextBlock Text="CPF" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Entity.CPF}" Height="30" Margin="0,0,0,10"/>
+
+                <TextBlock Text="E-mail" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Entity.Email}" Height="30" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Telefone" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Entity.Telefone}" Height="30" Margin="0,0,0,10"/>
+
+                <CheckBox Content="É Dizimista?" IsChecked="{Binding Entity.Dizimista}" Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0" Width="210">
+                <Button Content="Cancelar" Command="{Binding FecharCommand}" Width="100" Height="35" Margin="0,0,10,0"/>
+                <Button Content="Salvar" Command="{Binding SalvarCommand}" Width="100" Height="35" Background="#27AE60" Foreground="White" FontWeight="Bold"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

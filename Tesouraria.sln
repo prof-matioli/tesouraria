@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tesouraria.Desktop", "Tesou
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tesouraria.Tests", "Tesouraria.Tests\Tesouraria.Tests.csproj", "{7EA4F40A-0039-449C-89D0-8CA32A9717F0}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Tesouraria.Setup", "Tesouraria.Setup\Tesouraria.Setup.vdproj", "{421B5A20-36E1-D3DC-5421-EFCCCDADBC39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,8 +85,17 @@ Global
 		{7EA4F40A-0039-449C-89D0-8CA32A9717F0}.Release|x64.Build.0 = Release|Any CPU
 		{7EA4F40A-0039-449C-89D0-8CA32A9717F0}.Release|x86.ActiveCfg = Release|Any CPU
 		{7EA4F40A-0039-449C-89D0-8CA32A9717F0}.Release|x86.Build.0 = Release|Any CPU
+		{421B5A20-36E1-D3DC-5421-EFCCCDADBC39}.Debug|Any CPU.ActiveCfg = Debug
+		{421B5A20-36E1-D3DC-5421-EFCCCDADBC39}.Debug|x64.ActiveCfg = Debug
+		{421B5A20-36E1-D3DC-5421-EFCCCDADBC39}.Debug|x86.ActiveCfg = Debug
+		{421B5A20-36E1-D3DC-5421-EFCCCDADBC39}.Release|Any CPU.ActiveCfg = Release
+		{421B5A20-36E1-D3DC-5421-EFCCCDADBC39}.Release|x64.ActiveCfg = Release
+		{421B5A20-36E1-D3DC-5421-EFCCCDADBC39}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E2301E79-246E-44C7-9BDD-6CC1DE63B447}
 	EndGlobalSection
 EndGlobal

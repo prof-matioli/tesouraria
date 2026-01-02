@@ -1,0 +1,47 @@
+﻿<Window x:Class="Tesouraria.Desktop.Views.Cadastros.CadastroUsuarioFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cadastro de Usuário" 
+        Width="500"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterScreen" 
+        ResizeMode="NoResize">
+
+    <Border Background="#F4F6F7" Padding="20">
+
+        <StackPanel>
+            <TextBlock Text="Dados do Usuário" FontSize="18" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,20"/>
+
+            <TextBlock Text="Nome Completo:"/>
+            <TextBox Text="{Binding Entity.Nome}" Height="30" Margin="0,5,0,10"/>
+
+            <TextBlock Text="Login (E-mail ou Usuário):"/>
+            <TextBox Text="{Binding Entity.Email}" Height="30" Margin="0,5,0,10"/>
+
+            <TextBlock Text="Perfil de Acesso:"/>
+            <ComboBox ItemsSource="{Binding Perfis}"
+                      DisplayMemberPath="Nome"
+                      SelectedValuePath="Id"
+                      SelectedValue="{Binding Entity.PerfilId}"
+                      Height="30" Margin="0,5,0,10"/>
+
+            <TextBlock Text="Senha:" Margin="0,0,0,5"/>
+            <PasswordBox x:Name="txtSenha" Height="30" Margin="0,0,0,5" PasswordChanged="TxtSenha_PasswordChanged"/>
+
+            <TextBlock Text="(Deixe em branco para manter a senha atual ao editar)" 
+                       FontSize="10" Foreground="Gray" Margin="0,0,0,15"/>
+
+            <CheckBox Content="Usuário Ativo" IsChecked="{Binding Entity.Ativo}" Margin="0,0,0,20"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="Cancelar" Command="{Binding FecharCommand}" 
+                        Height="35" Width="100" Margin="0,0,10,0" 
+                        Background="#95A5A6" Foreground="White" FontSize="16" BorderThickness="0"/>
+
+                <Button Content="Salvar" Command="{Binding SalvarCommand}" 
+                        Height="35" Width="100" 
+                        Background="#27AE60" Foreground="White" FontSize="16" BorderThickness="0"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

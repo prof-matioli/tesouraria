@@ -1,0 +1,124 @@
+﻿<Window x:Class="Tesouraria.Desktop.Views.Cadastros.LancamentoCadastroView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:Tesouraria.Desktop.Converters"
+        mc:Ignorable="d"
+        Title="Novo Lançamento Financeiro" Height="500" Width="600"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+
+    <Window.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <Style TargetType="Control" x:Key="InputStyle">
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Center">
+                <RadioButton Content="DESPESA (Saída)" IsChecked="{Binding IsDespesa}" 
+                             FontSize="14" FontWeight="Bold" Foreground="DarkRed" Margin="0,0,20,0"/>
+                <RadioButton Content="RECEITA (Entrada)" IsChecked="{Binding IsReceita}" 
+                             FontSize="14" FontWeight="Bold" Foreground="DarkGreen"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Descrição do Lançamento:"/>
+                <TextBox Text="{Binding Dto.Descricao, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource InputStyle}"/>
+            </StackPanel>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Valor (R$):"/>
+                    <TextBox Text="{Binding Dto.Valor, StringFormat=N2}" Style="{StaticResource InputStyle}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Data de Vencimento:"/>
+                    <DatePicker SelectedDate="{Binding Dto.DataVencimento}" Style="{StaticResource InputStyle}"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Categoria:"/>
+                    <ComboBox ItemsSource="{Binding CategoriasFiltradas}"
+                              DisplayMemberPath="Nome"
+                              SelectedValuePath="Id"
+                              SelectedValue="{Binding Dto.CategoriaId}"
+                              Style="{StaticResource InputStyle}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Centro de Custo:"/>
+                    <ComboBox ItemsSource="{Binding CentrosCusto}"
+                              DisplayMemberPath="Nome"
+                              SelectedValuePath="Id"
+                              SelectedValue="{Binding Dto.CentroCustoId}"
+                              Style="{StaticResource InputStyle}"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="4">
+                <StackPanel Visibility="{Binding IsReceita, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Fiel (Opcional - Dízimo/Doação Nominal):"/>
+                    <ComboBox ItemsSource="{Binding Fieis}"
+                              DisplayMemberPath="Nome"
+                              SelectedValuePath="Id"
+                              SelectedValue="{Binding Dto.FielId}"
+                              Style="{StaticResource InputStyle}"/>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding IsDespesa, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="Fornecedor (Opcional):"/>
+                    <ComboBox ItemsSource="{Binding Fornecedores}"
+                              DisplayMemberPath="RazaoSocial"
+                              SelectedValuePath="Id"
+                              SelectedValue="{Binding Dto.FornecedorId}"
+                              Style="{StaticResource InputStyle}"/>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="5">
+                <TextBlock Text="Observações:"/>
+                <TextBox Text="{Binding Dto.Observacao}" 
+                         TextWrapping="Wrap" 
+                         AcceptsReturn="True" 
+                         VerticalScrollBarVisibility="Auto"
+                         Height="60"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+                <Button Content="Cancelar" Command="{Binding FecharCommand}" Width="100" Height="35" Margin="0,0,10,0"/>
+                <Button Content="SALVAR" Command="{Binding SalvarCommand}" Width="100" Height="35" FontWeight="Bold"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
