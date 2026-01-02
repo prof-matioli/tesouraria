@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq; // Necessário para o FirstOrDefault
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Tesouraria.Application.Services;
 using Tesouraria.Desktop.Core;
 using Tesouraria.Desktop.Views.Cadastros;
 using Tesouraria.Domain.Entities;
@@ -18,17 +20,13 @@ namespace Tesouraria.Desktop.ViewModels
 
         public ObservableCollection<Fiel> Items { get; } = new ObservableCollection<Fiel>();
 
+        // SelectedItem mantido apenas se você quiser usar para outras coisas, 
+        // mas não é mais obrigatório para os botões da linha.
         private Fiel? _selectedItem;
         public Fiel? SelectedItem
         {
             get => _selectedItem;
-            set
-            {
-                SetProperty(ref _selectedItem, value);
-                // Atualiza o status dos botões
-                (EditarCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (ExcluirCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _selectedItem, value);
         }
 
         public ICommand NovoCommand { get; }
@@ -41,12 +39,22 @@ namespace Tesouraria.Desktop.ViewModels
             _repository = repository;
             _serviceProvider = serviceProvider;
 
+            // Novo: Passa 0
             NovoCommand = new RelayCommand(_ => AbrirFormulario(0));
 
-            // Só habilita Editar se tiver item selecionado
-            EditarCommand = new RelayCommand(_ => AbrirFormulario(SelectedItem!.Id), _ => SelectedItem != null);
+            // CORREÇÃO AQUI: 
+            // O comando agora aceita o 'id' (object) passado pelo CommandParameter do XAML
+            // Removemos a validação "SelectedItem != null" pois o botão está na linha, o item existe.
+            EditarCommand = new RelayCommand(param =>
+            {
+                if (param is int id) AbrirFormulario(id);
+            });
 
-            ExcluirCommand = new RelayCommand(async _ => await Excluir(), _ => SelectedItem != null);
+            ExcluirCommand = new RelayCommand(async param =>
+            {
+                if (param is int id) await Excluir(id);
+            });
+
             BuscarCommand = new RelayCommand(async _ => await CarregarGrid());
 
             _ = CarregarGrid();
@@ -56,18 +64,13 @@ namespace Tesouraria.Desktop.ViewModels
         {
             try
             {
-                // 1. Cria a Janela de FORMULÁRIO (FormWindow)
                 var formWindow = _serviceProvider.GetRequiredService<CadastroFielFormWindow>();
 
-                // 2. Carrega os dados (0 = Novo, >0 = Edição)
-                // O ConfigureAwait(false) evita travar a UI enquanto busca no banco
-                // Mas aqui usamos Task.Run para garantir que o load ocorra
+                // Carrega os dados na ViewModel do formulário
                 _ = formWindow.ViewModel.Carregar(id);
 
-                // 3. Abre travando a tela (Dialog)
                 formWindow.ShowDialog();
 
-                // 4. Quando fechar, atualiza o grid
                 _ = CarregarGrid();
             }
             catch (Exception ex)
@@ -90,13 +93,24 @@ namespace Tesouraria.Desktop.ViewModels
             catch (Exception ex) { MessageBox.Show($"Erro no grid: {ex.Message}"); }
         }
 
-        private async Task Excluir()
+        // Método Excluir alterado para receber o ID
+        private async Task Excluir(int id)
         {
-            if (SelectedItem == null) return;
-            if (MessageBox.Show($"Tem certeza que deseja excluir {SelectedItem.Nome}?", "Exclusão", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            // Busca o item na lista local apenas para mostrar o nome na mensagem
+            var itemParaExcluir = Items.FirstOrDefault(x => x.Id == id);
+            var nome = itemParaExcluir?.Nome ?? "este item";
+
+            if (MessageBox.Show($"Tem certeza que deseja excluir {nome}?", "Exclusão", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
-                await _repository.DeleteAsync(SelectedItem.Id);
-                await CarregarGrid();
+                try
+                {
+                    await _repository.DeleteAsync(id); // Usa o ID passado pelo botão
+                    await CarregarGrid();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erro ao excluir: {ex.Message}");
+                }
             }
         }
     }

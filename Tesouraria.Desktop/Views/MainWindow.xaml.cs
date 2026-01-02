@@ -4,32 +4,39 @@ using Tesouraria.Desktop.ViewModels;
 
 namespace Tesouraria.Desktop.Views
 {
-    /// <summary>
-    /// Lógica interna para MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
+        // Construtor com Injeção de Dependência
         public MainWindow(MainViewModel viewModel)
         {
             InitializeComponent();
 
-            // ESTA É A LINHA MÁGICA:
-            // Conecta o XAML (View) ao Código C# (ViewModel)
+            // Vincula a ViewModel a esta View
             DataContext = viewModel;
         }
 
+        // =============================================================
+        // 1. Ação do Botão SAIR
+        // =============================================================
+        private void BtnSair_Click(object sender, RoutedEventArgs e)
+        {
+            // Apenas manda fechar a janela.
+            // Isso disparará automaticamente o evento 'Window_Closing' abaixo.
+            // Não coloque MessageBox aqui para evitar a mensagem duplicada.
+            this.Close();
+        }
+        
+        // Lógica para confirmar saída ao clicar no "X" da janela
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            // Exibe a mensagem de confirmação
             var result = MessageBox.Show("Deseja realmente sair do sistema?",
                                          "Confirmação",
                                          MessageBoxButton.YesNo,
                                          MessageBoxImage.Question);
 
-            // Se o usuário clicar em 'Não', cancela o fechamento
             if (result == MessageBoxResult.No)
             {
-                e.Cancel = true;
+                e.Cancel = true; // Cancela o fechamento
             }
         }
     }

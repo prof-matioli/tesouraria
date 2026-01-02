@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Tesouraria.Desktop.Core;
@@ -20,33 +23,35 @@ namespace Tesouraria.Desktop.ViewModels
         public CategoriaFinanceira? SelectedItem
         {
             get => _selectedItem;
-            set
-            {
-                SetProperty(ref _selectedItem, value);
-                (EditarCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (ExcluirCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _selectedItem, value);
         }
 
-        public ICommand CarregarCommand { get; }
         public ICommand NovoCommand { get; }
         public ICommand EditarCommand { get; }
         public ICommand ExcluirCommand { get; }
         public ICommand BuscarCommand { get; }
 
-
         public CategoriaFinanceiraListaViewModel(IRepository<CategoriaFinanceira> repository, IServiceProvider serviceProvider)
         {
             _repository = repository;
             _serviceProvider = serviceProvider;
-            CarregarCommand = new RelayCommand(async _ => await CarregarDados());
-            ExcluirCommand = new RelayCommand(async _ => await Excluir(), _ => SelectedItem != null);
+
             NovoCommand = new RelayCommand(_ => AbrirFormulario(0));
-            EditarCommand = new RelayCommand(_ => AbrirFormulario(SelectedItem!.Id), _ => SelectedItem != null);
+
+            // CORREÇÃO: Comandos agora aceitam o ID vindo do botão da linha
+            EditarCommand = new RelayCommand(param =>
+            {
+                if (param is int id) AbrirFormulario(id);
+            });
+
+            ExcluirCommand = new RelayCommand(async param =>
+            {
+                if (param is int id) await Excluir(id);
+            });
+
             BuscarCommand = new RelayCommand(async _ => await CarregarDados());
 
             _ = CarregarDados();
-
         }
 
         private void AbrirFormulario(int id)
@@ -63,23 +68,36 @@ namespace Tesouraria.Desktop.ViewModels
 
         public async Task CarregarDados()
         {
-            Items.Clear();
-            var dados = await _repository.GetAllAsync();
-            foreach (var item in dados)
+            try
             {
-                Items.Add(item);
+                Items.Clear();
+                var dados = await _repository.GetAllAsync();
+                foreach (var item in dados)
+                {
+                    Items.Add(item);
+                }
             }
+            catch (Exception ex) { MessageBox.Show("Erro ao carregar lista: " + ex.Message); }
         }
 
-        private async Task Excluir()
+        // CORREÇÃO: Método alterado para receber ID
+        private async Task Excluir(int id)
         {
-            if (SelectedItem == null) return;
+            var itemParaExcluir = Items.FirstOrDefault(x => x.Id == id);
+            var nome = itemParaExcluir?.Nome ?? "esta categoria";
 
-            var confirm = MessageBox.Show($"Deseja excluir '{SelectedItem.Nome}'?", "Confirmação", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var confirm = MessageBox.Show($"Deseja excluir '{nome}'?", "Confirmação", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (confirm == MessageBoxResult.Yes)
             {
-                await _repository.DeleteAsync(SelectedItem.Id);
-                await CarregarDados();
+                try
+                {
+                    await _repository.DeleteAsync(id);
+                    await CarregarDados();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erro ao excluir: {ex.Message}\nVerifique se não há lançamentos vinculados.", "Erro");
+                }
             }
         }
     }

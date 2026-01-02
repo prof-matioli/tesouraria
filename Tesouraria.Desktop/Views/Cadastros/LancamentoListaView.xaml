@@ -1,18 +1,12 @@
-﻿<Window x:Class="Tesouraria.Desktop.Views.Cadastros.LancamentoListaView"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:converters="clr-namespace:Tesouraria.Desktop.Converters"
-        mc:Ignorable="d"
-        Title="Gestão Financeira - Tesouraria" Height="650" Width="1000"
-        WindowStartupLocation="CenterScreen">
+﻿<UserControl x:Class="Tesouraria.Desktop.Views.Cadastros.LancamentoListaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignWidth="1000"
+             Background="White" Height="706">
 
-    <Window.Resources>
-        <converters:TipoTransacaoToColorConverter x:Key="TipoColorConverter"/>
-    </Window.Resources>
-
-    <Grid Margin="15">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -20,140 +14,241 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" BorderBrush="#DDDDDD" BorderThickness="1" Padding="10" Margin="0,0,0,10" CornerRadius="5" Background="#FAFAFA">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="De:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="SemiBold"/>
-                <DatePicker SelectedDate="{Binding DataInicio}" Width="120" Margin="0,0,15,0" VerticalContentAlignment="Center"/>
-
-                <TextBlock Text="Até:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="SemiBold"/>
-                <DatePicker SelectedDate="{Binding DataFim}" Width="120" Margin="0,0,20,0" VerticalContentAlignment="Center"/>
-
-                <Button Content="🔍 Filtrar" Command="{Binding BuscarCommand}" Width="100" Height="30"/>
-
-                <CheckBox Content="Exibir Cancelados" 
-                  IsChecked="{Binding ExibirCancelados}" 
-                  VerticalAlignment="Center" 
-                  Margin="20,0,0,0"
-                  FontSize="14"/>
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                <Border Width="50" Height="50" CornerRadius="25" Background="#ECF0F1" Margin="0,0,15,0">
+                    <TextBlock Text="💰" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Lançamentos Financeiros" FontSize="22" FontWeight="Bold" Foreground="#2C3E50"/>
+                    <TextBlock Text="Gerencie as receitas e despesas" FontSize="14" Foreground="#7F8C8D"/>
+                </StackPanel>
             </StackPanel>
+
+            <Border Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5" Padding="15">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                        <TextBlock Text="Data Início" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
+                        <DatePicker SelectedDate="{Binding FiltroDataInicio}" Width="110" Height="30"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,15,0">
+                        <TextBlock Text="Data Fim" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
+                        <DatePicker SelectedDate="{Binding FiltroDataFim}" Width="110" Height="30"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="0,0,20,0">
+                        <TextBlock Text="Centro de Custo" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
+                        <ComboBox ItemsSource="{Binding CentrosCusto}" DisplayMemberPath="Nome" SelectedValuePath="Id" SelectedValue="{Binding FiltroCentroCustoId}" Width="180" Height="30"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,5,0,0">
+                        <CheckBox Content="Apenas lançamentos pagos" IsChecked="{Binding FiltroApenasPagos}" Margin="0,0,0,5" Cursor="Hand"/>
+                        <CheckBox Content="Exibir cancelados" IsChecked="{Binding FiltroIncluirCancelados}" Cursor="Hand"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="5" Command="{Binding BuscarCommand}" VerticalAlignment="Bottom" Background="#3498DB" Foreground="White" BorderThickness="0" Padding="25,0" Height="32" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔍" Margin="0,0,8,0"/>
+                            <TextBlock Text="Filtrar" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="White" CornerRadius="4" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,15">
+
+            <DataGrid ItemsSource="{Binding ListaLancamentos}" 
+          SelectedItem="{Binding LancamentoSelecionado}"
+          AutoGenerateColumns="False" 
+          CanUserAddRows="False" 
+          IsReadOnly="True" 
+          SelectionMode="Single"
+          BorderThickness="0"
+          GridLinesVisibility="Horizontal" 
+          HeadersVisibility="Column" 
+          RowHeaderWidth="0"
+          RowHeight="40"
+          Background="White">
+
+                <DataGrid.Resources>
+                    <Style x:Key="CellTextStyle" TargetType="TextBlock">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="Margin" Value="10,0"/>
+                    </Style>
+                </DataGrid.Resources>
+
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="FontSize" Value="14"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Tipo}" Value="Receita">
+                                <Setter Property="Foreground" Value="#1565C0"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Tipo}" Value="Despesa">
+                                <Setter Property="Foreground" Value="#C62828"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Cancelado">
+                                <Setter Property="Foreground" Value="#95A5A6"/>
+                                <Setter Property="FontStyle" Value="Italic"/>
+                                <Setter Property="ToolTip" Value="Lançamento Cancelado"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Padding" Value="10,0"/>
+                        <Setter Property="Height" Value="40"/>
+                        <Setter Property="Background" Value="#F8F9FA"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                        <Setter Property="Foreground" Value="#2C3E50"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Vencimento" Binding="{Binding DataVencimento, StringFormat=dd/MM/yyyy}" Width="110"
+                            ElementStyle="{StaticResource CellTextStyle}"/>
+
+                    <DataGridTemplateColumn Header="Descrição" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel VerticalAlignment="Center" Margin="10,0">
+                                    <TextBlock Text="{Binding Descricao}" FontWeight="Medium"/>
+                                    <TextBlock Text="{Binding PessoaNome}" FontSize="11" Opacity="0.8"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Centro Custo" Binding="{Binding CentroCustoNome}" Width="140"
+                            ElementStyle="{StaticResource CellTextStyle}"/>
+
+                    <DataGridTextColumn Header="Categoria" Binding="{Binding CategoriaNome}" Width="140"
+                            ElementStyle="{StaticResource CellTextStyle}"/>
+
+                    <DataGridTemplateColumn Header="Tipo" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Tipo}" FontWeight="Bold" Margin="10,0" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Valor" Binding="{Binding ValorOriginal, StringFormat=C2}" Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource CellTextStyle}">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"
+                            ElementStyle="{StaticResource CellTextStyle}"/>
+
+                    <DataGridTemplateColumn Header="Ações" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.ExcluirCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                            CommandParameter="{Binding Id}" ToolTip="Cancelar / Excluir" 
+                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                            HorizontalAlignment="Center">
+                                    <TextBlock Text="🗑️" FontSize="14" Foreground="#C0392B"/>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
         </Border>
 
-        <DataGrid Grid.Row="1" 
-                  ItemsSource="{Binding Lancamentos}" 
-                  SelectedItem="{Binding LancamentoSelecionado}"
-                  AutoGenerateColumns="False" 
-                  CanUserAddRows="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  GridLinesVisibility="Horizontal"
-                  BorderThickness="1"
-                  BorderBrush="#DDDDDD">
-
-            <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Cancelado}" Value="True">
-                            <Setter Property="Foreground" Value="Red"/>
-                            <Setter Property="FontStyle" Value="Italic"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </DataGrid.RowStyle>
-            
-            <DataGrid.Resources>
-                <Style TargetType="DataGridColumnHeader">
-                    <Setter Property="Padding" Value="10,5"/>
-                    <Setter Property="FontWeight" Value="SemiBold"/>
-                    <Setter Property="Background" Value="#F0F0F0"/>
-                </Style>
-                <Style TargetType="DataGridCell">
-                    <Setter Property="Padding" Value="5"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="DataGridCell">
-                                <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
-                                    <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </DataGrid.Resources>
-
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90"/>
-
-                <DataGridTextColumn Header="Vencimento" Binding="{Binding DataVencimento, StringFormat=dd/MM/yyyy}" Width="100"/>
-
-                <DataGridTextColumn Header="Descrição" Binding="{Binding Descricao}" Width="*"/>
-
-                <DataGridTextColumn Header="Fiel/Fornecedor" Binding="{Binding PessoaNome}" Width="180"/>
-
-                <DataGridTextColumn Header="Categoria" Binding="{Binding CategoriaNome}" Width="150"/>
-
-                <DataGridTemplateColumn Header="Tipo" Width="90">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Tipo}" 
-                                       Foreground="{Binding Tipo, Converter={StaticResource TipoColorConverter}}"
-                                       FontWeight="Bold"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <DataGridTextColumn Header="Valor Original" Binding="{Binding ValorOriginal, StringFormat=C2}" Width="110" FontWeight="SemiBold"/>
-
-                <DataGridTextColumn Header="Data Pagto" Binding="{Binding DataPagamento, StringFormat=dd/MM/yyyy}" Width="100"/>
-            </DataGrid.Columns>
-        </DataGrid>
-
-        <Border Grid.Row="2" Margin="0,15,0,15" Padding="15,10" Background="#F9F9F9" BorderBrush="#EEEEEE" BorderThickness="1" CornerRadius="5">
+        <Border Grid.Row="2" Margin="0,0,0,15" Padding="15,10" Background="#FAFAFA" BorderBrush="#EEEEEE" BorderThickness="1" CornerRadius="5">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,30,0">
-                    <TextBlock Text="Saldo Previsto (Agendado):" FontSize="14" Foreground="#666666" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Saldo Previsto:" FontSize="14" Foreground="#666" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <Border Background="#FFF8E1" CornerRadius="3" Padding="8,2">
                         <TextBlock Text="{Binding SaldoPrevisto, StringFormat=C2}" FontSize="16" FontWeight="Bold" Foreground="#CC8800"/>
                     </Border>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Saldo Realizado (Caixa):" FontSize="14" Foreground="#666666" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Saldo Realizado:" FontSize="14" Foreground="#666" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <Border Background="#E3F2FD" CornerRadius="3" Padding="8,2">
-                        <TextBlock Text="{Binding SaldoPeriodo, StringFormat=C2}" FontSize="18" FontWeight="Bold" Foreground="#1565C0"/>
+                        <TextBlock Text="{Binding SaldoRealizado, StringFormat=C2}" FontSize="18" FontWeight="Bold" Foreground="#1565C0"/>
                     </Border>
                 </StackPanel>
-
             </StackPanel>
         </Border>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
 
-            <Button Content="❌ Cancelar Lançamento" 
-                    Command="{Binding CancelarCommand}" 
+            <Button Content="❌ Cancelar" Command="{Binding CancelarCommand}" 
                     Background="White" BorderBrush="#FFCDD2" BorderThickness="1" Foreground="#C62828"
-                    Width="160" Height="40" Margin="0,0,10,0"/>
+                    Width="120" Height="40" Margin="0,0,10,0" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="4"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
 
-            <Button Content="↩️ ESTORNAR" 
-                    Command="{Binding EstornarCommand}" 
-                    Width="120" Height="40" Margin="0,0,10,0" 
-                    Background="#FFE0B2" FontWeight="SemiBold"/>
+            <Button Content="↩️ Estornar" Command="{Binding EstornarCommand}" 
+                    Width="120" Height="40" Margin="0,0,10,0" Background="#FFE0B2" FontWeight="SemiBold" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="4"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
 
-            <Button Content="✏️ EDITAR" 
-                    Command="{Binding EditarCommand}" 
-                    Width="100" Height="40" Margin="0,0,10,0" 
-                    Background="#FFF9C4" FontWeight="SemiBold"/>
+            <Button Content="✏️ Editar" Command="{Binding EditarCommand}" 
+                    Width="100" Height="40" Margin="0,0,10,0" Background="#FFF9C4" FontWeight="SemiBold" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="4"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
 
-            <Button Content="💲 BAIXAR / PAGAR" 
-                    Command="{Binding BaixarCommand}" 
-                    Width="150" Height="40" Margin="0,0,10,0" 
-                    Background="#C8E6C9" FontWeight="Bold" Foreground="#1B5E20"/>
+            <Button Content="💲 Baixar / Pagar" Command="{Binding BaixarCommand}" 
+                    Width="150" Height="40" Margin="0,0,10,0" Background="#C8E6C9" FontWeight="Bold" Foreground="#1B5E20" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="4"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
 
-            <Button Content="➕ NOVO LANÇAMENTO" 
-                    Command="{Binding NovoCommand}" 
-                    Width="180" Height="40" 
-                    Background="#2196F3" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
+            <Button Content="➕ Novo" Command="{Binding NovoCommand}" 
+                    Width="140" Height="40" Background="#2196F3" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="4"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+
         </StackPanel>
-
     </Grid>
-</Window>
+</UserControl>

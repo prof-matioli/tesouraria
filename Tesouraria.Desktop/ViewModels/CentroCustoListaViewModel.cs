@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Tesouraria.Desktop.Core;
@@ -20,12 +23,7 @@ namespace Tesouraria.Desktop.ViewModels
         public CentroCusto? SelectedItem
         {
             get => _selectedItem;
-            set
-            {
-                SetProperty(ref _selectedItem, value);
-                (EditarCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (ExcluirCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _selectedItem, value);
         }
 
         public ICommand NovoCommand { get; }
@@ -39,8 +37,18 @@ namespace Tesouraria.Desktop.ViewModels
             _serviceProvider = serviceProvider;
 
             NovoCommand = new RelayCommand(_ => AbrirFormulario(0));
-            EditarCommand = new RelayCommand(_ => AbrirFormulario(SelectedItem!.Id), _ => SelectedItem != null);
-            ExcluirCommand = new RelayCommand(async _ => await Excluir(), _ => SelectedItem != null);
+
+            // CORREÇÃO: Comandos configurados para receber o ID do parâmetro (botão da linha)
+            EditarCommand = new RelayCommand(param =>
+            {
+                if (param is int id) AbrirFormulario(id);
+            });
+
+            ExcluirCommand = new RelayCommand(async param =>
+            {
+                if (param is int id) await Excluir(id);
+            });
+
             BuscarCommand = new RelayCommand(async _ => await CarregarGrid());
 
             _ = CarregarGrid();
@@ -60,27 +68,39 @@ namespace Tesouraria.Desktop.ViewModels
 
         private async Task CarregarGrid()
         {
-            Items.Clear();
-            var todos = await _repository.GetAllAsync();
+            try
+            {
+                Items.Clear();
+                var todos = await _repository.GetAllAsync();
 
-            // FILTRO MANUAL: Mostra apenas os ativos
-            // Se você já arrumou o GetAllAsync no repositório, o .Where aqui é redundante mas seguro
-            var ativos = todos.Where(x => x.Ativo).ToList();
+                // Filtra apenas ativos, se necessário (ou traga todos se preferir)
+                var ativos = todos.Where(x => x.Ativo).ToList();
 
-            foreach (var item in ativos) Items.Add(item);
+                foreach (var item in ativos) Items.Add(item);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao carregar lista: " + ex.Message);
+            }
         }
 
-        private async Task Excluir()
+        // CORREÇÃO: Método alterado para receber o ID explicitamente
+        private async Task Excluir(int id)
         {
-            if (SelectedItem == null) return;
-            if (MessageBox.Show($"Excluir {SelectedItem.Nome}?", "Confirmar", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            var itemParaExcluir = Items.FirstOrDefault(x => x.Id == id);
+            var nome = itemParaExcluir?.Nome ?? "este centro de custo";
+
+            if (MessageBox.Show($"Deseja realmente excluir '{nome}'?", "Confirmar Exclusão", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
                 try
                 {
-                    await _repository.DeleteAsync(SelectedItem.Id);
+                    await _repository.DeleteAsync(id);
                     await CarregarGrid();
                 }
-                catch (Exception ex) { MessageBox.Show("Erro ao excluir: " + ex.Message); }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erro ao excluir: {ex.Message}\nVerifique se não há lançamentos vinculados.", "Erro");
+                }
             }
         }
     }

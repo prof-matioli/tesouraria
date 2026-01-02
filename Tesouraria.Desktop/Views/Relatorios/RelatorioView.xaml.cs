@@ -1,17 +1,12 @@
-﻿using System.Windows;
-using Tesouraria.Desktop.ViewModels;
+﻿using System.Windows.Controls;
 
 namespace Tesouraria.Desktop.Views.Relatorios
 {
-    /// <summary>
-    /// Lógica interna para RelatorioView.xaml
-    /// </summary>
-    public partial class RelatorioView : Window
+    public partial class RelatorioView : UserControl
     {
-        public RelatorioView(RelatorioViewModel viewModel)
+        public RelatorioView()
         {
             InitializeComponent();
-            DataContext = viewModel;
         }
     }
 }

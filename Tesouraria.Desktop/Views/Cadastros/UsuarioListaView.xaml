@@ -1,0 +1,197 @@
+﻿<UserControl x:Class="Tesouraria.Desktop.Views.Cadastros.UsuarioListaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000"
+             Background="White">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+            <Grid Margin="0,0,0,15">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="50" Height="50" CornerRadius="25" Background="#ECF0F1" Margin="0,0,15,0">
+                        <TextBlock Text="👥" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Usuários do Sistema" FontSize="22" FontWeight="Bold" Foreground="#2C3E50"/>
+                        <TextBlock Text="Gerencie o acesso e permissões" FontSize="14" Foreground="#7F8C8D"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+
+                    <CheckBox Content="Exibir Inativos" 
+                          IsChecked="{Binding ExibirInativos, UpdateSourceTrigger=PropertyChanged}" 
+                          VerticalAlignment="Center" Margin="0,0,20,0" FontSize="14" Cursor="Hand"/>
+                    
+                    <Button Command="{Binding BuscarCommand}" 
+                            Background="#3498DB" Foreground="White" BorderThickness="0" 
+                            Padding="15,0" Height="35" Margin="0,0,10,0" Cursor="Hand" ToolTip="Atualizar Lista">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔄" Margin="0,0,8,0"/>
+                            <TextBlock Text="Atualizar" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+
+                    <Button Command="{Binding NovoCommand}" 
+                            Background="#27AE60" Foreground="White" BorderThickness="0" 
+                            Padding="15,0" Height="35" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="➕" Margin="0,0,8,0"/>
+                            <TextBlock Text="Novo Usuário" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="White" CornerRadius="4" BorderBrush="#E0E0E0" BorderThickness="1">
+            <DataGrid ItemsSource="{Binding Items}" 
+                      SelectedItem="{Binding SelectedItem}"
+                      AutoGenerateColumns="False" 
+                      CanUserAddRows="False" 
+                      IsReadOnly="True" 
+                      SelectionMode="Single"
+                      BorderThickness="0"
+                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" RowHeight="40"
+                      Background="White">
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Padding" Value="10,0"/>
+                        <Setter Property="Height" Value="40"/>
+                        <Setter Property="Background" Value="#F8F9FA"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                        <Setter Property="Foreground" Value="#2C3E50"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.Resources>
+                    <Style TargetType="TextBlock" x:Key="CellText">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="Margin" Value="10,0"/>
+                    </Style>
+                </DataGrid.Resources>
+
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Ativo}" Value="False">
+                                <Setter Property="Foreground" Value="Gray"/>
+                                <Setter Property="FontStyle" Value="Italic"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="60" ElementStyle="{StaticResource CellText}"/>
+
+                    <DataGridTemplateColumn Header="Nome Completo" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Nome}" FontWeight="Medium" VerticalAlignment="Center" Margin="10,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="E-mail (Login)" Binding="{Binding Email}" Width="250" ElementStyle="{StaticResource CellText}"/>
+
+                    <DataGridTextColumn Header="Perfil" Binding="{Binding Perfil.Nome}" Width="150" ElementStyle="{StaticResource CellText}"/>
+
+                    <DataGridTemplateColumn Header="Status" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Left" Margin="10,0">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#E74C3C"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Ativo}" Value="True">
+                                                    <Setter Property="Background" Value="#27AE60"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+
+                                    <TextBlock Foreground="White" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="INATIVO"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Ativo}" Value="True">
+                                                        <Setter Property="Text" Value="ATIVO"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Ações" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Command="{Binding DataContext.EditarCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                            CommandParameter="{Binding Id}" Margin="0,0,10,0" ToolTip="Editar" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                        <TextBlock Text="✏️" FontSize="16"/>
+                                    </Button>
+
+                                    <Button Command="{Binding DataContext.AlternarStatusCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                            CommandParameter="{Binding Id}" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                        <TextBlock FontSize="16">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="🗑️"/>
+                                                    <Setter Property="Foreground" Value="#C0392B"/>
+                                                    <Setter Property="ToolTip" Value="Inativar Usuário"/>
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Ativo}" Value="False">
+                                                            <Setter Property="Text" Value="✅"/>
+                                                            <Setter Property="Foreground" Value="#27AE60"/>
+                                                            <Setter Property="ToolTip" Value="Reativar Usuário"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Button>
+
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <TextBlock Text="Total de Usuários:" Foreground="Gray" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBlock Text="{Binding Items.Count, FallbackValue=0}" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

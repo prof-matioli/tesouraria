@@ -1,27 +1,47 @@
-﻿using System.Collections.ObjectModel;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.Extensions.DependencyInjection; // <--- NECESSÁRIO PARA O SERVICE PROVIDER
 using Tesouraria.Application.DTOs;
 using Tesouraria.Application.Interfaces;
 using Tesouraria.Desktop.Core;
 using Tesouraria.Desktop.Views.Cadastros;
+using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Enums;
+using Tesouraria.Domain.Interfaces;
 
 namespace Tesouraria.Desktop.ViewModels
 {
     public class LancamentoListaViewModel : ViewModelBase
     {
         private readonly ILancamentoService _lancamentoService;
-        private readonly IServiceProvider _serviceProvider; // <--- NOVA DEPENDÊNCIA
-        
-        // Comandos
-        public ICommand BuscarCommand { get; }
-        public ICommand NovoCommand { get; }
-        public ICommand BaixarCommand { get; }
-        public ICommand CancelarCommand { get; }
-        public ICommand EditarCommand { get; }
-        public ICommand EstornarCommand { get; }
+        private readonly IRepository<CentroCusto> _centroCustoRepository;
+        private readonly IServiceProvider _serviceProvider;
+
+        // --- LISTAS ---
+        public ObservableCollection<LancamentoDto> ListaLancamentos { get; } = new();
+        public ObservableCollection<CentroCusto> CentrosCusto { get; } = new();
+
+        // --- SELEÇÃO (Para os botões do rodapé funcionarem) ---
+        private LancamentoDto? _lancamentoSelecionado;
+        public LancamentoDto? LancamentoSelecionado
+        {
+            get => _lancamentoSelecionado;
+            set
+            {
+                SetProperty(ref _lancamentoSelecionado, value);
+                // Notifica a interface para habilitar/desabilitar os botões
+                (BaixarCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (EstornarCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (CancelarCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (EditarCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+
+        // --- TOTAIS FINANCEIROS ---
         private decimal _saldoPrevisto;
         public decimal SaldoPrevisto
         {
@@ -29,223 +49,238 @@ namespace Tesouraria.Desktop.ViewModels
             set => SetProperty(ref _saldoPrevisto, value);
         }
 
-        // Filtros
-        private DateTime _dataInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-        public DateTime DataInicio
+        private decimal _saldoRealizado;
+        public decimal SaldoRealizado
         {
-            get => _dataInicio;
-            set { SetProperty(ref _dataInicio, value); }
+            get => _saldoRealizado;
+            set => SetProperty(ref _saldoRealizado, value);
         }
 
-        private DateTime _dataFim = DateTime.Now;
-        public DateTime DataFim
-        {
-            get => _dataFim;
-            set { SetProperty(ref _dataFim, value); }
-        }
+        // --- FILTROS ---
+        private DateTime _filtroDataInicio;
+        public DateTime FiltroDataInicio { get => _filtroDataInicio; set => SetProperty(ref _filtroDataInicio, value); }
 
-        // Listagem
-        public ObservableCollection<LancamentoDto> Lancamentos { get; } = new();
+        private DateTime _filtroDataFim;
+        public DateTime FiltroDataFim { get => _filtroDataFim; set => SetProperty(ref _filtroDataFim, value); }
 
-        private LancamentoDto? _lancamentoSelecionado;
+        private int? _filtroCentroCustoId;
+        public int? FiltroCentroCustoId { get => _filtroCentroCustoId; set => SetProperty(ref _filtroCentroCustoId, value); }
 
-        public LancamentoDto? LancamentoSelecionado
-        {
-            get => _lancamentoSelecionado;
-            set
-            {
-                SetProperty(ref _lancamentoSelecionado, value);
-                (BaixarCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (CancelarCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (EditarCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (EstornarCommand as RelayCommand)?.RaiseCanExecuteChanged(); 
-            }
-        }
+        private bool _filtroApenasPagos;
+        public bool FiltroApenasPagos { get => _filtroApenasPagos; set => SetProperty(ref _filtroApenasPagos, value); }
 
-        // Totais
-        private decimal _saldoPeriodo;
-        public decimal SaldoPeriodo
-        {
-            get => _saldoPeriodo;
-            set => SetProperty(ref _saldoPeriodo, value);
-        }
+        private bool _filtroIncluirCancelados;
+        public bool FiltroIncluirCancelados { get => _filtroIncluirCancelados; set => SetProperty(ref _filtroIncluirCancelados, value); }
 
-        private bool _exibirCancelados;
-        public bool ExibirCancelados
-        {
-            get => _exibirCancelados;
-            set
-            {
-                if (SetProperty(ref _exibirCancelados, value))
-                {
-                    // SE O VALOR MUDAR, RECARREGA A LISTA AUTOMATICAMENTE
-                    _ = BuscarAsync();
-                }
-            }
-        }
+        // --- COMANDOS ---
+        public ICommand NovoCommand { get; }
+        public ICommand EditarCommand { get; }
+        public ICommand ExcluirCommand { get; } // Usado no botão da linha do grid
+        public ICommand BuscarCommand { get; }
 
-        // CONSTRUTOR
+        // Comandos Restaurados
+        public ICommand BaixarCommand { get; }
+        public ICommand EstornarCommand { get; }
+        public ICommand CancelarCommand { get; } // Botão do rodapé
+
         public LancamentoListaViewModel(
             ILancamentoService lancamentoService,
-            IServiceProvider serviceProvider) // <--- INJETANDO O PROVIDER
+            IRepository<CentroCusto> centroCustoRepository,
+            IServiceProvider serviceProvider)
         {
             _lancamentoService = lancamentoService;
+            _centroCustoRepository = centroCustoRepository;
             _serviceProvider = serviceProvider;
 
-            // Define Data Fim para o último dia do mês atual
-            DataFim = DataInicio.AddMonths(1).AddDays(-1);
+            // Configuração Inicial dos Filtros
+            var hoje = DateTime.Now;
+            FiltroDataInicio = new DateTime(hoje.Year, hoje.Month, 1);
+            FiltroDataFim = FiltroDataInicio.AddMonths(1).AddDays(-1);
+            FiltroApenasPagos = false;
+            FiltroIncluirCancelados = false;
 
-            BuscarCommand = new RelayCommand(async _ => await BuscarAsync());
+            NovoCommand = new RelayCommand(_ => AbrirFormulario(0));
+            BuscarCommand = new RelayCommand(async _ => await CarregarDados());
 
-            // O comando Novo chama o método que usa o Provider
-            NovoCommand = new RelayCommand(_ => AbrirNovoLancamento());
+            // Editar: Funciona tanto pelo botão da linha (param int) quanto pelo rodapé (LancamentoSelecionado)
+            EditarCommand = new RelayCommand(param =>
+            {
+                if (param is int id) AbrirFormulario(id);
+                else if (LancamentoSelecionado != null) AbrirFormulario(LancamentoSelecionado.Id);
+            });
 
-            BaixarCommand = new RelayCommand(async _ => await BaixarAsync(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pendente);
-            CancelarCommand = new RelayCommand(async _ => await CancelarAsync(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status != StatusLancamento.Cancelado);
+            // Excluir (Lixeira da linha)
+            ExcluirCommand = new RelayCommand(async param =>
+            {
+                if (param is int id) await Cancelar(id);
+            });
 
-            EditarCommand = new RelayCommand(async _ => await EditarLancamento(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status != StatusLancamento.Cancelado);
+            // --- LÓGICA DOS BOTÕES RESTAURADOS ---
 
-            EstornarCommand = new RelayCommand(async _ => await EstornarLancamento(), _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pago);
+            // BAIXAR: Habilitado apenas se selecionado e estiver Pendente
+            BaixarCommand = new RelayCommand(async _ => await BaixarLancamento(),
+                _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pendente);
 
-            // Carga inicial
-            BuscarAsync();
+            // ESTORNAR: Habilitado apenas se selecionado e estiver Pago
+            EstornarCommand = new RelayCommand(async _ => await EstornarLancamento(),
+                _ => LancamentoSelecionado != null && (LancamentoSelecionado.Status == StatusLancamento.Pago));
+
+            // CANCELAR (Rodapé): Habilitado se selecionado e não estiver cancelado
+            CancelarCommand = new RelayCommand(async _ => await Cancelar(LancamentoSelecionado!.Id),
+                _ => LancamentoSelecionado != null && LancamentoSelecionado.Status != StatusLancamento.Cancelado);
+
+            _ = CarregarListasAuxiliares();
+            _ = CarregarDados();
         }
 
-        private async Task BuscarAsync()
+        private async Task CarregarListasAuxiliares()
         {
             try
             {
-                var dados = await _lancamentoService.ObterTodosAsync(DataInicio, DataFim, ExibirCancelados);
-                Lancamentos.Clear();
+                var custos = await _centroCustoRepository.GetAllAsync();
+                CentrosCusto.Clear();
+                CentrosCusto.Add(new CentroCusto { Id = 0, Nome = "TODOS" });
+                foreach (var c in custos.OrderBy(x => x.Nome)) CentrosCusto.Add(c);
+                FiltroCentroCustoId = 0;
+            }
+            catch { }
+        }
+
+        private async Task CarregarDados()
+        {
+            try
+            {
+                ListaLancamentos.Clear();
+
+                var filtroDto = new FiltroRelatorioDto
+                {
+                    DataInicio = FiltroDataInicio,
+                    DataFim = FiltroDataFim,
+                    CentroCustoId = (FiltroCentroCustoId == 0) ? null : FiltroCentroCustoId,
+                    ApenasPagos = FiltroApenasPagos,
+                    IncluirCancelados = FiltroIncluirCancelados
+                };
+
+                var dados = await _lancamentoService.GerarRelatorioAsync(filtroDto);
+
+                decimal receitaPrev = 0, despesaPrev = 0;
+                decimal receitaReal = 0, despesaReal = 0;
+
                 foreach (var item in dados)
                 {
-                    Lancamentos.Add(item);
+                    ListaLancamentos.Add(item);
+
+                    // Cálculo dos Totais (Ignora Cancelados)
+                    if (item.Status != StatusLancamento.Cancelado)
+                    {
+                        if (item.Tipo == TipoTransacao.Receita) receitaPrev += item.ValorOriginal;
+                        else despesaPrev += item.ValorOriginal;
+
+                        // Se já tem valor pago, soma no realizado. Se não tem mas está "Pago", usa o original.
+                        var valorBaixado = item.ValorPago ?? (item.Status == StatusLancamento.Pago ? item.ValorOriginal : 0);
+
+                        if (item.Tipo == TipoTransacao.Receita) receitaReal += valorBaixado;
+                        else despesaReal += valorBaixado;
+                    }
                 }
 
-                // --- CÁLCULOS DOS SALDOS ---
-                // Saldo Realizado (Caixa Líquido: O que entrou de fato - O que saiu de fato)
-                SaldoPeriodo = await _lancamentoService.ObterSaldoPeriodoAsync(DataInicio, DataFim);
-                // Saldo Previsto (Competência: O que está agendado para vencer neste período)
-                SaldoPrevisto = await _lancamentoService.ObterSaldoPrevistoAsync(DataInicio, DataFim);
+                SaldoPrevisto = receitaPrev - despesaPrev;
+                SaldoRealizado = receitaReal - despesaReal;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao buscar dados: {ex.Message}");
+                MessageBox.Show($"Erro ao carregar lançamentos: {ex.Message}");
             }
         }
 
-        private async void AbrirNovoLancamento()
+        private void AbrirFormulario(int id)
         {
             try
             {
-                var viewCadastro = _serviceProvider.GetRequiredService<LancamentoCadastroView>();
+                // 1. Obtém a nova janela via injeção de dependência
+                var formView = _serviceProvider.GetRequiredService<LancamentoCadastroView>();
 
-                if (viewCadastro.DataContext is LancamentoCadastroViewModel vm)
+                // 2. CORREÇÃO DO ERRO DE OWNER:
+                // Verifica explicitamente se a MainWindow existe E se ela não é a própria janela que estamos abrindo.
+                var mainWindow = System.Windows.Application.Current.MainWindow;
+
+                if (mainWindow != null && mainWindow != formView)
                 {
-                    await vm.CarregarListasAsync();
+                    formView.Owner = mainWindow;
+                }
+                else
+                {
+                    // Se não puder definir o Owner (ex: MainWindow nula), 
+                    // garantimos que ela abra centralizada na tela
+                    formView.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 }
 
-                viewCadastro.Owner = System.Windows.Application.Current.MainWindow;
-                viewCadastro.ShowDialog();
+                // 3. Configura a ViewModel e abre a janela
+                var vm = formView.DataContext as LancamentoCadastroViewModel;
+                if (vm != null)
+                {
+                    // Obs: A assinatura do evento RequestClose já está no construtor da View (code-behind),
+                    // então não precisamos fazer "vm.RequestClose += ..." aqui.
 
-                await BuscarAsync();
+                    _ = vm.Carregar(id);
+                    formView.ShowDialog(); // Abre como Modal
+                    _ = CarregarDados();   // Atualiza a lista ao fechar
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao abrir janela: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao abrir formulário: {ex.Message}");
             }
         }
+        // --- OPERAÇÕES ---
 
-        private async Task EditarLancamento()
+        private async Task BaixarLancamento()
         {
             if (LancamentoSelecionado == null) return;
 
-            try
-            {
-                // Resolve a janela e a VM via DI
-                var viewCadastro = _serviceProvider.GetRequiredService<LancamentoCadastroView>();
-                var viewModel = (LancamentoCadastroViewModel)viewCadastro.DataContext;
-                
-                // CARREGA OS DADOS ANTES DE ABRIR
-                await viewModel.CarregarListasAsync();
-                await viewModel.CarregarParaEdicaoAsync(LancamentoSelecionado.Id);
-
-                viewCadastro.Owner = System.Windows.Application.Current.MainWindow;
-                viewCadastro.ShowDialog();
-
-                // Recarrega a lista após fechar a janela de edição
-                await BuscarAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao abrir edição: {ex.Message}");
-            }
-        }
-
-        private async Task BaixarAsync()
-        {
-            if (LancamentoSelecionado == null) return;
-
-            var msg = $"Deseja confirmar o pagamento/recebimento de:\n\n{LancamentoSelecionado.Descricao}\nValor: {LancamentoSelecionado.ValorOriginal:C2}?";
-            if (MessageBox.Show(msg, "Confirmar Baixa", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (MessageBox.Show($"Confirma a baixa de '{LancamentoSelecionado.Descricao}' no valor de {LancamentoSelecionado.ValorOriginal:C2}?",
+                "Baixar", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 try
                 {
-                    var dtoBaixa = new BaixarLancamentoDto
+                    var baixaDto = new BaixarLancamentoDto
                     {
                         LancamentoId = LancamentoSelecionado.Id,
                         DataPagamento = DateTime.Now,
                         ValorPago = LancamentoSelecionado.ValorOriginal
                     };
-
-                    await _lancamentoService.BaixarAsync(dtoBaixa);
-                    await BuscarAsync();
+                    await _lancamentoService.BaixarAsync(baixaDto);
+                    await CarregarDados();
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Erro ao baixar: {ex.Message}");
-                }
-            }
-        }
-
-        private async Task CancelarAsync()
-        {
-            if (LancamentoSelecionado == null) return;
-
-            if (MessageBox.Show("Tem certeza que deseja CANCELAR este lançamento?", "Confirmar Cancelamento", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    await _lancamentoService.CancelarAsync(LancamentoSelecionado.Id);
-                    await BuscarAsync();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Erro ao cancelar: {ex.Message}");
-                }
+                catch (Exception ex) { MessageBox.Show($"Erro ao baixar: {ex.Message}"); }
             }
         }
 
         private async Task EstornarLancamento()
         {
             if (LancamentoSelecionado == null) return;
-
-            var msg = $"Deseja estornar (desfazer) o pagamento deste lançamento?\n\nEle voltará a ficar PENDENTE.\n\nDescrição: {LancamentoSelecionado.Descricao}";
-
-            if (MessageBox.Show(msg, "Confirmar Estorno", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (MessageBox.Show($"Deseja estornar '{LancamentoSelecionado.Descricao}'?", "Estornar", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
                 try
                 {
                     await _lancamentoService.EstornarLancamento(LancamentoSelecionado.Id);
-
-                    MessageBox.Show("Pagamento estornado com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                    await BuscarAsync(); // Atualiza a grid e os saldos
+                    await CarregarDados();
                 }
-                catch (Exception ex)
+                catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}"); }
+            }
+        }
+
+        private async Task Cancelar(int id)
+        {
+            if (MessageBox.Show("Deseja realmente CANCELAR este lançamento? Irreversível.", "Confirmação",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                try
                 {
-                    MessageBox.Show($"Erro ao estornar: {ex.Message}", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                    await _lancamentoService.CancelarAsync(id);
+                    await CarregarDados();
                 }
+                catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}"); }
             }
         }
     }

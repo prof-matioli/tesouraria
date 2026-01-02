@@ -3,18 +3,55 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Tesouraria.Desktop.Views"
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        
+        xmlns:vm="clr-namespace:Tesouraria.Desktop.ViewModels"
+        xmlns:views="clr-namespace:Tesouraria.Desktop.Views"
+        xmlns:cad="clr-namespace:Tesouraria.Desktop.Views.Cadastros"
+        xmlns:rel="clr-namespace:Tesouraria.Desktop.Views.Relatorios"
+        
         mc:Ignorable="d"
         Title="Tesouraria Paroquial - Painel Principal" 
         Height="768" Width="1024"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         Background="#F4F6F7"
-        WindowStyle="None">
+        Closing="Window_Closing">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:LancamentoListaViewModel}">
+            <cad:LancamentoListaView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:FielListaViewModel}">
+            <cad:FielListaView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:FornecedorListaViewModel}">
+            <cad:FornecedorListaView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:CategoriaFinanceiraListaViewModel}">
+            <cad:CategoriaFinanceiraListaView />
+        </DataTemplate>
+        
+        <DataTemplate DataType="{x:Type vm:CentroCustoListaViewModel}">
+            <cad:CentroCustoListaView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:RelatorioViewModel}">
+            <rel:RelatorioView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:UsuarioListaViewModel}">
+            <cad:UsuarioListaView />
+        </DataTemplate>
+
 
         <Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Height" Value="45"/>
@@ -35,16 +72,9 @@
                                     <ColumnDefinition Width="50"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-
                                 <ContentPresenter Content="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" 
-                                                  Grid.Column="0" 
-                                                  HorizontalAlignment="Center" 
-                                                  VerticalAlignment="Center"
-                                                  TextBlock.FontSize="18"/>
-
-                                <ContentPresenter Content="{TemplateBinding Content}" 
-                                                  Grid.Column="1" 
-                                                  VerticalAlignment="Center"/>
+                                                  Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" TextBlock.FontSize="18"/>
+                                <ContentPresenter Content="{TemplateBinding Content}" Grid.Column="1" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -64,18 +94,6 @@
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="25,20,0,5"/>
             <Setter Property="Opacity" Value="0.7"/>
-        </Style>
-
-        <Style x:Key="DashboardCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Margin" Value="10"/>
-            <Setter Property="Padding" Value="20"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.1" Color="#2C3E50"/>
-                </Setter.Value>
-            </Setter>
         </Style>
     </Window.Resources>
 
@@ -104,54 +122,39 @@
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="0,0,0,20">
 
+                        <Button Content="Visão Geral" Tag="🏠" Command="{Binding NavegarHomeCommand}" Style="{StaticResource MenuButtonStyle}"/>
+
                         <TextBlock Text="CADASTROS" Style="{StaticResource MenuSectionHeaderStyle}"/>
-                        <Button Content="Fiéis / Dizimistas" Tag="👥" Command="{Binding AbrirFieisCommand}" Style="{StaticResource MenuButtonStyle}"/>
-                        <Button Content="Fornecedores" Tag="🚚" Command="{Binding AbrirFornecedoresCommand}" Style="{StaticResource MenuButtonStyle}"/>
-                        <Button Content="Centros de Custo" Tag="🏢" Command="{Binding AbrirCentroCustoCommand}" Style="{StaticResource MenuButtonStyle}"/>
-                        <Button Content="Categorias Financ." Tag="🗂️" Command="{Binding AbrirPlanoContasCommand}" Style="{StaticResource MenuButtonStyle}"/>
+                        <Button Content="Fiéis / Dizimistas" Tag="👥" Command="{Binding NavegarFieisCommand}" Style="{StaticResource MenuButtonStyle}"/>
+                        <Button Content="Fornecedores" Tag="🚚" Command="{Binding NavegarFornecedoresCommand}" Style="{StaticResource MenuButtonStyle}"/>
+                        <Button Content="Centros de Custo" Tag="🏢" Command="{Binding NavegarCentroCustoCommand}" Style="{StaticResource MenuButtonStyle}"/>
+                        <Button Content="Categorias Financ." Tag="🗂️" Command="{Binding NavegarPlanoContasCommand}" Style="{StaticResource MenuButtonStyle}"/>
 
                         <StackPanel Visibility="{Binding IsTesourariaAcessivel, Converter={StaticResource BoolToVis}}">
                             <TextBlock Text="FINANCEIRO" Style="{StaticResource MenuSectionHeaderStyle}"/>
-                            <Button Content="Lançamentos" Tag="💰" Command="{Binding AbrirLancamentosCommand}" Style="{StaticResource MenuButtonStyle}"/>
-                            <Button Content="Relatórios" Tag="📊" Command="{Binding AbrirRelatoriosCommand}" Style="{StaticResource MenuButtonStyle}"/>
+                            <Button Content="Lançamentos" Tag="💰" Command="{Binding NavegarLancamentosCommand}" Style="{StaticResource MenuButtonStyle}"/>
+                            <Button Content="Relatórios" Tag="📊" Command="{Binding NavegarRelatoriosCommand}" Style="{StaticResource MenuButtonStyle}"/>
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding IsAdministrador, Converter={StaticResource BoolToVis}}">
                             <TextBlock Text="CONFIGURAÇÕES" Style="{StaticResource MenuSectionHeaderStyle}"/>
-                            <Button Content="Usuários" Tag="⚙️" Command="{Binding AbrirUsuarioCommand}" Style="{StaticResource MenuButtonStyle}"/>
+                            <Button Content="Usuários" Tag="⚙️" Command="{Binding NavegarUsuarioCommand}" Style="{StaticResource MenuButtonStyle}"/>
                         </StackPanel>
-
                     </StackPanel>
                 </ScrollViewer>
 
                 <Border Grid.Row="2" Background="#243342" Padding="20">
                     <StackPanel VerticalAlignment="Center">
-
                         <StackPanel Margin="0,0,0,15" HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding SaudacaoUsuario}" 
-                                       Foreground="White" 
-                                       FontWeight="SemiBold" 
-                                       FontSize="14" 
-                                       TextTrimming="CharacterEllipsis" 
-                                       HorizontalAlignment="Center"
-                                       TextAlignment="Center" 
-                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SaudacaoUsuario}" Foreground="White" FontWeight="SemiBold" FontSize="14" 
+                                       TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                         </StackPanel>
-
-                        <Button Command="{Binding SairCommand}" 
-                                Height="35" 
-                                Background="#C0392B" 
-                                BorderThickness="0" 
-                                Cursor="Hand" 
-                                ToolTip="Sair do Sistema"
-                                HorizontalAlignment="Stretch">
-
+                        <Button Click="BtnSair_Click" Height="35" Background="#C0392B" BorderThickness="0" Cursor="Hand" ToolTip="Sair do Sistema" HorizontalAlignment="Stretch">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="5"/>
                                 </Style>
                             </Button.Resources>
-
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <TextBlock Text="🚪" FontSize="14" Foreground="White" Margin="0,0,8,0"/>
                                 <TextBlock Text="Sair" FontSize="12" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -162,91 +165,9 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Column="1" Margin="30">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <ContentControl Grid.Column="1" 
+                        Content="{Binding CurrentViewModel}" 
+                        Margin="0" />
 
-            <StackPanel Grid.Row="0" Margin="0,0,0,30">
-                <TextBlock Text="Visão Geral" FontSize="26" FontWeight="Bold" Foreground="#2C3E50"/>
-                <TextBlock Text="Resumo financeiro do mês atual" FontSize="14" Foreground="#7F8C8D" Margin="0,5,0,0"/>
-            </StackPanel>
-
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <Border Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="0,0,15,0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <Border Background="#E8F8F5" Width="35" Height="35" CornerRadius="10">
-                                <TextBlock Text="⬆️" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
-                            </Border>
-                            <TextBlock Text="Entradas" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="SemiBold" Foreground="#7F8C8D"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding Resumo.TotalReceitas, StringFormat=C2, FallbackValue='R$ 0,00'}" 
-                                   FontSize="22" FontWeight="Bold" Foreground="#27AE60"/>
-                        <TextBlock Text="{Binding Resumo.ComparativoReceita}" FontSize="11" Foreground="#27AE60" Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Column="1" Style="{StaticResource DashboardCardStyle}" Margin="15,0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <Border Background="#FDEDEC" Width="35" Height="35" CornerRadius="10">
-                                <TextBlock Text="⬇️" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
-                            </Border>
-                            <TextBlock Text="Saídas" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="SemiBold" Foreground="#7F8C8D"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding Resumo.TotalDespesas, StringFormat=C2, FallbackValue='R$ 0,00'}" 
-                                   FontSize="22" FontWeight="Bold" Foreground="#C0392B"/>
-                        <TextBlock Text="{Binding Resumo.ComparativoDespesa}" FontSize="11" Foreground="#7F8C8D" Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Column="2" Style="{StaticResource DashboardCardStyle}" Margin="15,0,0,0">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <Border Background="#EBF5FB" Width="35" Height="35" CornerRadius="10">
-                                <TextBlock Text="💰" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
-                            </Border>
-                            <TextBlock Text="Saldo Atual" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="SemiBold" Foreground="#7F8C8D"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding Resumo.Saldo, StringFormat=C2, FallbackValue='R$ 0,00'}" 
-                                   FontSize="22" FontWeight="Bold" Foreground="#2980B9"/>
-                        <TextBlock Text="Disponível em caixa" FontSize="11" Foreground="#7F8C8D" Margin="0,5,0,0"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-
-            <Border Grid.Row="2" Background="White" CornerRadius="10" Margin="0,30,0,0" BorderBrush="#E0E0E0" BorderThickness="1">
-                <Grid Margin="20">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0" Text="Evolução Financeira (Últimos 6 Meses)" 
-                               FontSize="16" FontWeight="SemiBold" Foreground="#2C3E50" Margin="0,0,0,15"/>
-
-                    <lvc:CartesianChart Grid.Row="1" Series="{Binding SeriesGrafico}" LegendLocation="Bottom">
-                        <lvc:CartesianChart.AxisX>
-                            <lvc:Axis Title="Mês" Labels="{Binding LabelsGrafico}" Separator="{x:Static lvc:DefaultAxes.CleanSeparator}"/>
-                        </lvc:CartesianChart.AxisX>
-                        <lvc:CartesianChart.AxisY>
-                            <lvc:Axis Title="Valor" LabelFormatter="{Binding YFormatter}"/>
-                        </lvc:CartesianChart.AxisY>
-                        <lvc:CartesianChart.DataTooltip>
-                            <lvc:DefaultTooltip SelectionMode="SharedYValues"/>
-                        </lvc:CartesianChart.DataTooltip>
-                    </lvc:CartesianChart>
-                </Grid>
-            </Border>
-        </Grid>
     </Grid>
 </Window>

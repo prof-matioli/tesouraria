@@ -29,7 +29,7 @@ namespace Tesouraria.Infrastructure.Data
             modelBuilder.Entity<Fiel>().HasQueryFilter(p => p.Ativo);
             modelBuilder.Entity<CentroCusto>().HasQueryFilter(p => p.Ativo);
             modelBuilder.Entity<CategoriaFinanceira>().HasQueryFilter(p => p.Ativo);
-            modelBuilder.Entity<Usuario>().HasQueryFilter(p => p.Ativo);
+            modelBuilder.Entity<Usuario>(); //.HasQueryFilter(p => p.Ativo);
         }
     }
 }

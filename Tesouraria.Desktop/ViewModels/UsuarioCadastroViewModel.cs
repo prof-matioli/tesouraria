@@ -16,7 +16,7 @@ namespace Tesouraria.Desktop.ViewModels
     {
         private readonly IRepository<Usuario> _repository;
         private readonly IRepository<Perfil> _perfilRepository;
-        
+
         private Usuario _entidadeOriginal;
 
         private Usuario _entity;

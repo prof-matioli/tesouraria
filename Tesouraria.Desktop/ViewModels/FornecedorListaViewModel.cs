@@ -1,11 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq; // Necessário para o FirstOrDefault
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Tesouraria.Desktop.Core;
-using Tesouraria.Desktop.Views.Cadastros; // Para achar o FormWindow
+using Tesouraria.Desktop.Views.Cadastros;
 using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Interfaces;
 
@@ -16,19 +17,14 @@ namespace Tesouraria.Desktop.ViewModels
         private readonly IRepository<Fornecedor> _repository;
         private readonly IServiceProvider _serviceProvider;
 
+        // A propriedade usada no ItemsSource do DataGrid é "Items"
         public ObservableCollection<Fornecedor> Items { get; } = new ObservableCollection<Fornecedor>();
 
         private Fornecedor? _selectedItem;
         public Fornecedor? SelectedItem
         {
             get => _selectedItem;
-            set
-            {
-                SetProperty(ref _selectedItem, value);
-                // Atualiza botões
-                (EditarCommand as RelayCommand)?.RaiseCanExecuteChanged();
-                (ExcluirCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _selectedItem, value);
         }
 
         public ICommand NovoCommand { get; }
@@ -43,12 +39,18 @@ namespace Tesouraria.Desktop.ViewModels
 
             NovoCommand = new RelayCommand(_ => AbrirFormulario(0));
 
-            EditarCommand = new RelayCommand(
-                _ => AbrirFormulario(SelectedItem!.Id),
-                _ => SelectedItem != null
-            );
+            // CORREÇÃO 1: Recebe o ID do CommandParameter (int) e chama o formulário
+            EditarCommand = new RelayCommand(param =>
+            {
+                if (param is int id) AbrirFormulario(id);
+            });
 
-            ExcluirCommand = new RelayCommand(async _ => await Excluir(), _ => SelectedItem != null);
+            // CORREÇÃO 2: Recebe o ID do CommandParameter (int) e chama a exclusão
+            ExcluirCommand = new RelayCommand(async param =>
+            {
+                if (param is int id) await Excluir(id);
+            });
+
             BuscarCommand = new RelayCommand(async _ => await CarregarGrid());
 
             _ = CarregarGrid();
@@ -58,16 +60,9 @@ namespace Tesouraria.Desktop.ViewModels
         {
             try
             {
-                // Pede a Janela de FORMULÁRIO (FormWindow)
                 var formWindow = _serviceProvider.GetRequiredService<CadastroFornecedorFormWindow>();
-
-                // Carrega os dados na ViewModel do formulário
                 _ = formWindow.ViewModel.Carregar(id);
-
-                // Abre travando a tela
                 formWindow.ShowDialog();
-
-                // Atualiza o grid ao voltar
                 _ = CarregarGrid();
             }
             catch (Exception ex)
@@ -90,14 +85,15 @@ namespace Tesouraria.Desktop.ViewModels
             catch (Exception ex) { MessageBox.Show($"Erro no grid: {ex.Message}"); }
         }
 
-        private async Task Excluir()
+        // CORREÇÃO 3: Método refatorado para aceitar o ID como parâmetro
+        private async Task Excluir(int id)
         {
-            // Validação de segurança
-            if (SelectedItem == null) return;
+            // Busca o item na lista local apenas para pegar o Nome/Razão Social para a mensagem
+            var itemParaExcluir = Items.FirstOrDefault(x => x.Id == id);
+            var nome = itemParaExcluir?.RazaoSocial ?? "este fornecedor";
 
-            // Pergunta de confirmação
             var resultado = MessageBox.Show(
-                $"Tem certeza que deseja excluir o fornecedor '{SelectedItem.RazaoSocial}'?",
+                $"Tem certeza que deseja excluir o fornecedor '{nome}'?",
                 "Confirmar Exclusão",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
@@ -106,12 +102,10 @@ namespace Tesouraria.Desktop.ViewModels
             {
                 try
                 {
-                    // Chama o repositório para deletar pelo ID
-                    await _repository.DeleteAsync(SelectedItem.Id);
+                    // Usa o ID passado pelo botão para deletar
+                    await _repository.DeleteAsync(id);
 
-                    // Recarrega o grid para sumir com o item excluído
                     await CarregarGrid();
-
                     MessageBox.Show("Fornecedor excluído com sucesso.");
                 }
                 catch (Exception ex)
