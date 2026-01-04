@@ -38,12 +38,12 @@
 
                     <StackPanel Grid.Column="0" Margin="0,0,15,0">
                         <TextBlock Text="Data Início" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
-                        <DatePicker SelectedDate="{Binding FiltroDataInicio}" Width="110" Height="30"/>
+                        <DatePicker SelectedDate="{Binding FiltroDataInicio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="110" Height="30"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="0,0,15,0">
                         <TextBlock Text="Data Fim" FontSize="11" Foreground="Gray" Margin="0,0,0,3"/>
-                        <DatePicker SelectedDate="{Binding FiltroDataFim}" Width="110" Height="30"/>
+                        <DatePicker SelectedDate="{Binding FiltroDataFim, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="110" Height="30"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Margin="0,0,20,0">
@@ -52,10 +52,15 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="0,5,0,0">
-                        <CheckBox Content="Apenas lançamentos pagos" IsChecked="{Binding FiltroApenasPagos}" Margin="0,0,0,5" Cursor="Hand"/>
-                        <CheckBox Content="Exibir cancelados" IsChecked="{Binding FiltroIncluirCancelados}" Cursor="Hand"/>
-                    </StackPanel>
+                        <CheckBox Content="Apenas lançamentos pagos" 
+                              IsChecked="{Binding FiltroApenasPagos, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                              Margin="0,0,0,5" Cursor="Hand"/>
 
+                        <CheckBox Content="Exibir cancelados" 
+                              IsChecked="{Binding FiltroIncluirCancelados, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                              Cursor="Hand"/>
+                    </StackPanel>
+                    
                     <Button Grid.Column="5" Command="{Binding BuscarCommand}" VerticalAlignment="Bottom" Background="#3498DB" Foreground="White" BorderThickness="0" Padding="25,0" Height="32" Cursor="Hand">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🔍" Margin="0,0,8,0"/>
@@ -74,17 +79,17 @@
         <Border Grid.Row="1" Background="White" CornerRadius="4" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,15">
 
             <DataGrid ItemsSource="{Binding ListaLancamentos}" 
-          SelectedItem="{Binding LancamentoSelecionado}"
-          AutoGenerateColumns="False" 
-          CanUserAddRows="False" 
-          IsReadOnly="True" 
-          SelectionMode="Single"
-          BorderThickness="0"
-          GridLinesVisibility="Horizontal" 
-          HeadersVisibility="Column" 
-          RowHeaderWidth="0"
-          RowHeight="40"
-          Background="White">
+                      SelectedItem="{Binding LancamentoSelecionado}"
+                      AutoGenerateColumns="False" 
+                      CanUserAddRows="False" 
+                      IsReadOnly="True" 
+                      SelectionMode="Single"
+                      BorderThickness="0"
+                      GridLinesVisibility="Horizontal" 
+                      HeadersVisibility="Column" 
+                      RowHeaderWidth="0"
+                      RowHeight="40"
+                      Background="White">
 
                 <DataGrid.Resources>
                     <Style x:Key="CellTextStyle" TargetType="TextBlock">
@@ -128,7 +133,7 @@
 
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Vencimento" Binding="{Binding DataVencimento, StringFormat=dd/MM/yyyy}" Width="110"
-                            ElementStyle="{StaticResource CellTextStyle}"/>
+                                        ElementStyle="{StaticResource CellTextStyle}"/>
 
                     <DataGridTemplateColumn Header="Descrição" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
@@ -142,10 +147,10 @@
                     </DataGridTemplateColumn>
 
                     <DataGridTextColumn Header="Centro Custo" Binding="{Binding CentroCustoNome}" Width="140"
-                            ElementStyle="{StaticResource CellTextStyle}"/>
+                                        ElementStyle="{StaticResource CellTextStyle}"/>
 
                     <DataGridTextColumn Header="Categoria" Binding="{Binding CategoriaNome}" Width="140"
-                            ElementStyle="{StaticResource CellTextStyle}"/>
+                                        ElementStyle="{StaticResource CellTextStyle}"/>
 
                     <DataGridTemplateColumn Header="Tipo" Width="100">
                         <DataGridTemplateColumn.CellTemplate>
@@ -164,20 +169,24 @@
                     </DataGridTextColumn>
 
                     <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"
-                            ElementStyle="{StaticResource CellTextStyle}"/>
-
-                    <DataGridTemplateColumn Header="Ações" Width="80">
+                                        ElementStyle="{StaticResource CellTextStyle}"/>
+<!--
+                    <DataGridTemplateColumn Header="Ações" Width="100">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Button Command="{Binding DataContext.ExcluirCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                            CommandParameter="{Binding Id}" ToolTip="Cancelar / Excluir" 
-                            Background="Transparent" BorderThickness="0" Cursor="Hand"
-                            HorizontalAlignment="Center">
-                                    <TextBlock Text="🗑️" FontSize="14" Foreground="#C0392B"/>
-                                </Button>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Command="{Binding DataContext.ExcluirCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                        CommandParameter="{Binding Id}" 
+                                        ToolTip="Excluir Registro" 
+                                        Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                        <TextBlock Text="🗑️" FontSize="14" Foreground="#C0392B"/>
+                                    </Button>
+
+                                </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
+                    -->
                 </DataGrid.Columns>
             </DataGrid>
 

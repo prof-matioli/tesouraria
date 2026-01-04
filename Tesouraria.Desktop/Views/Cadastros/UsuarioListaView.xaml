@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:cad="clr-namespace:Tesouraria.Desktop.Views.Cadastros"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="1000"
              Background="White">
@@ -29,9 +30,9 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
 
                     <CheckBox Content="Exibir Inativos" 
-                          IsChecked="{Binding ExibirInativos, UpdateSourceTrigger=PropertyChanged}" 
-                          VerticalAlignment="Center" Margin="0,0,20,0" FontSize="14" Cursor="Hand"/>
-                    
+                              IsChecked="{Binding ExibirInativos, UpdateSourceTrigger=PropertyChanged}" 
+                              VerticalAlignment="Center" Margin="0,0,20,0" FontSize="14" Cursor="Hand"/>
+
                     <Button Command="{Binding BuscarCommand}" 
                             Background="#3498DB" Foreground="White" BorderThickness="0" 
                             Padding="15,0" Height="35" Margin="0,0,10,0" Cursor="Hand" ToolTip="Atualizar Lista">
@@ -115,8 +116,7 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="E-mail (Login)" Binding="{Binding Email}" Width="250" ElementStyle="{StaticResource CellText}"/>
-
+                    <DataGridTextColumn Header="E-mail" Binding="{Binding Email}" Width="250" ElementStyle="{StaticResource CellText}"/>
                     <DataGridTextColumn Header="Perfil" Binding="{Binding Perfil.Nome}" Width="150" ElementStyle="{StaticResource CellText}"/>
 
                     <DataGridTemplateColumn Header="Status" Width="100">
@@ -133,7 +133,6 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-
                                     <TextBlock Foreground="White" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">

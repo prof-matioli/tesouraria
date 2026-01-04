@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Tesouraria.Application.DTOs;
@@ -12,6 +9,7 @@ using Tesouraria.Desktop.Views.Cadastros;
 using Tesouraria.Domain.Entities;
 using Tesouraria.Domain.Enums;
 using Tesouraria.Domain.Interfaces;
+using Tesouraria.Desktop.Properties;
 
 namespace Tesouraria.Desktop.ViewModels
 {
@@ -24,6 +22,45 @@ namespace Tesouraria.Desktop.ViewModels
         // --- LISTAS ---
         public ObservableCollection<LancamentoDto> ListaLancamentos { get; } = new();
         public ObservableCollection<CentroCusto> CentrosCusto { get; } = new();
+
+        // --- PROPRIEDADES DE FILTRO COM PERSISTÊNCIA ---
+
+        private DateTime _filtroDataInicio;
+        public DateTime FiltroDataInicio
+        {
+            get => _filtroDataInicio;
+            set
+            {
+                if (SetProperty(ref _filtroDataInicio, value))
+                {
+                    // 1. Salva a preferência assim que o usuário muda
+                    Settings.Default.FiltroDataInicio = value;
+                    Settings.Default.Save();
+
+                    // Opcional: Recarregar a grid automaticamente ao mudar a data
+                    // _ = CarregarDados(); 
+                }
+            }
+        }
+
+        private DateTime _filtroDataFim;
+        public DateTime FiltroDataFim
+        {
+            get => _filtroDataFim;
+            set
+            {
+                if (SetProperty(ref _filtroDataFim, value))
+                {
+                    // 1. Salva a preferência
+                    Settings.Default.FiltroDataFim = value;
+                    Settings.Default.Save();
+
+                    // Opcional: Recarregar a grid automaticamente ao mudar a data
+                    _ = CarregarDados(); 
+                }
+            }
+        }
+
 
         // --- SELEÇÃO (Para os botões do rodapé funcionarem) ---
         private LancamentoDto? _lancamentoSelecionado;
@@ -56,32 +93,54 @@ namespace Tesouraria.Desktop.ViewModels
             set => SetProperty(ref _saldoRealizado, value);
         }
 
-        // --- FILTROS ---
-        private DateTime _filtroDataInicio;
-        public DateTime FiltroDataInicio { get => _filtroDataInicio; set => SetProperty(ref _filtroDataInicio, value); }
-
-        private DateTime _filtroDataFim;
-        public DateTime FiltroDataFim { get => _filtroDataFim; set => SetProperty(ref _filtroDataFim, value); }
-
+        // --- OUTROS FILTROS ---
         private int? _filtroCentroCustoId;
         public int? FiltroCentroCustoId { get => _filtroCentroCustoId; set => SetProperty(ref _filtroCentroCustoId, value); }
+        /*
+                private bool _filtroApenasPagos;
+                public bool FiltroApenasPagos { get => _filtroApenasPagos; set => SetProperty(ref _filtroApenasPagos, value); }
+
+                private bool _filtroIncluirCancelados;
+                public bool FiltroIncluirCancelados { get => _filtroIncluirCancelados; set => SetProperty(ref _filtroIncluirCancelados, value); }
+        */
 
         private bool _filtroApenasPagos;
-        public bool FiltroApenasPagos { get => _filtroApenasPagos; set => SetProperty(ref _filtroApenasPagos, value); }
+        public bool FiltroApenasPagos
+        {
+            get => _filtroApenasPagos;
+            set
+            {
+                if (SetProperty(ref _filtroApenasPagos, value))
+                {
+                    // Assim que marcar/desmarcar, recarrega a lista
+                    _ = CarregarDados();
+                }
+            }
+        }
 
         private bool _filtroIncluirCancelados;
-        public bool FiltroIncluirCancelados { get => _filtroIncluirCancelados; set => SetProperty(ref _filtroIncluirCancelados, value); }
+        public bool FiltroIncluirCancelados
+        {
+            get => _filtroIncluirCancelados;
+            set
+            {
+                if (SetProperty(ref _filtroIncluirCancelados, value))
+                {
+                    // Assim que marcar/desmarcar, recarrega a lista
+                    _ = CarregarDados();
+                }
+            }
+        }
+
 
         // --- COMANDOS ---
         public ICommand NovoCommand { get; }
         public ICommand EditarCommand { get; }
-        public ICommand ExcluirCommand { get; } // Usado no botão da linha do grid
+        public ICommand ExcluirCommand { get; }
         public ICommand BuscarCommand { get; }
-
-        // Comandos Restaurados
         public ICommand BaixarCommand { get; }
         public ICommand EstornarCommand { get; }
-        public ICommand CancelarCommand { get; } // Botão do rodapé
+        public ICommand CancelarCommand { get; }
 
         public LancamentoListaViewModel(
             ILancamentoService lancamentoService,
@@ -92,17 +151,18 @@ namespace Tesouraria.Desktop.ViewModels
             _centroCustoRepository = centroCustoRepository;
             _serviceProvider = serviceProvider;
 
-            // Configuração Inicial dos Filtros
-            var hoje = DateTime.Now;
-            FiltroDataInicio = new DateTime(hoje.Year, hoje.Month, 1);
-            FiltroDataFim = FiltroDataInicio.AddMonths(1).AddDays(-1);
+            // 1. Carrega as datas salvas (ou define o padrão se for a 1ª vez)
+            InicializarDatas();
+
+            // Configuração Inicial dos Filtros Booleanos
             FiltroApenasPagos = false;
             FiltroIncluirCancelados = false;
 
+            // --- Inicialização dos Comandos ---
             NovoCommand = new RelayCommand(_ => AbrirFormulario(0));
             BuscarCommand = new RelayCommand(async _ => await CarregarDados());
 
-            // Editar: Funciona tanto pelo botão da linha (param int) quanto pelo rodapé (LancamentoSelecionado)
+            // Editar
             EditarCommand = new RelayCommand(param =>
             {
                 if (param is int id) AbrirFormulario(id);
@@ -115,22 +175,59 @@ namespace Tesouraria.Desktop.ViewModels
                 if (param is int id) await Cancelar(id);
             });
 
-            // --- LÓGICA DOS BOTÕES RESTAURADOS ---
-
-            // BAIXAR: Habilitado apenas se selecionado e estiver Pendente
+            // Baixar
             BaixarCommand = new RelayCommand(async _ => await BaixarLancamento(),
                 _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pendente);
 
-            // ESTORNAR: Habilitado apenas se selecionado e estiver Pago
+            // Estornar
             EstornarCommand = new RelayCommand(async _ => await EstornarLancamento(),
-                _ => LancamentoSelecionado != null && (LancamentoSelecionado.Status == StatusLancamento.Pago));
+                _ => LancamentoSelecionado != null && LancamentoSelecionado.Status == StatusLancamento.Pago);
 
-            // CANCELAR (Rodapé): Habilitado se selecionado e não estiver cancelado
+            // Cancelar (Rodapé)
             CancelarCommand = new RelayCommand(async _ => await Cancelar(LancamentoSelecionado!.Id),
                 _ => LancamentoSelecionado != null && LancamentoSelecionado.Status != StatusLancamento.Cancelado);
 
+            // Carregamentos Iniciais
             _ = CarregarListasAuxiliares();
             _ = CarregarDados();
+        }
+
+        private void InicializarDatas()
+        {
+            try
+            {
+                var inicioSalvo = Settings.Default.FiltroDataInicio;
+                var fimSalvo = Settings.Default.FiltroDataFim;
+
+                // Validação: Se o ano for 1 (DateTime.MinValue), considera que nunca foi salvo
+                bool nuncaSalvou = inicioSalvo.Year < 2000;
+
+                if (nuncaSalvou)
+                {
+                    // Padrão: Mês Atual
+                    var hoje = DateTime.Today;
+                    // IMPORTANTE: Definimos direto nas variáveis privadas para não disparar o Save() na inicialização
+                    _filtroDataInicio = new DateTime(hoje.Year, hoje.Month, 1);
+                    _filtroDataFim = _filtroDataInicio.AddMonths(1).AddDays(-1);
+                }
+                else
+                {
+                    // Recupera o que estava salvo
+                    _filtroDataInicio = inicioSalvo;
+                    _filtroDataFim = fimSalvo;
+                }
+
+                // Notifica a tela que os valores mudaram
+                OnPropertyChanged(nameof(FiltroDataInicio));
+                OnPropertyChanged(nameof(FiltroDataFim));
+            }
+            catch
+            {
+                // Fallback de segurança
+                var hoje = DateTime.Today;
+                _filtroDataInicio = new DateTime(hoje.Year, hoje.Month, 1);
+                _filtroDataFim = _filtroDataInicio.AddMonths(1).AddDays(-1);
+            }
         }
 
         private async Task CarregarListasAuxiliares()
@@ -176,7 +273,7 @@ namespace Tesouraria.Desktop.ViewModels
                         if (item.Tipo == TipoTransacao.Receita) receitaPrev += item.ValorOriginal;
                         else despesaPrev += item.ValorOriginal;
 
-                        // Se já tem valor pago, soma no realizado. Se não tem mas está "Pago", usa o original.
+                        // Lógica de saldo realizado
                         var valorBaixado = item.ValorPago ?? (item.Status == StatusLancamento.Pago ? item.ValorOriginal : 0);
 
                         if (item.Tipo == TipoTransacao.Receita) receitaReal += valorBaixado;
@@ -197,11 +294,7 @@ namespace Tesouraria.Desktop.ViewModels
         {
             try
             {
-                // 1. Obtém a nova janela via injeção de dependência
                 var formView = _serviceProvider.GetRequiredService<LancamentoCadastroView>();
-
-                // 2. CORREÇÃO DO ERRO DE OWNER:
-                // Verifica explicitamente se a MainWindow existe E se ela não é a própria janela que estamos abrindo.
                 var mainWindow = System.Windows.Application.Current.MainWindow;
 
                 if (mainWindow != null && mainWindow != formView)
@@ -210,21 +303,15 @@ namespace Tesouraria.Desktop.ViewModels
                 }
                 else
                 {
-                    // Se não puder definir o Owner (ex: MainWindow nula), 
-                    // garantimos que ela abra centralizada na tela
                     formView.WindowStartupLocation = WindowStartupLocation.CenterScreen;
                 }
 
-                // 3. Configura a ViewModel e abre a janela
                 var vm = formView.DataContext as LancamentoCadastroViewModel;
                 if (vm != null)
                 {
-                    // Obs: A assinatura do evento RequestClose já está no construtor da View (code-behind),
-                    // então não precisamos fazer "vm.RequestClose += ..." aqui.
-
                     _ = vm.Carregar(id);
-                    formView.ShowDialog(); // Abre como Modal
-                    _ = CarregarDados();   // Atualiza a lista ao fechar
+                    formView.ShowDialog();
+                    _ = CarregarDados();
                 }
             }
             catch (Exception ex)
@@ -232,6 +319,7 @@ namespace Tesouraria.Desktop.ViewModels
                 MessageBox.Show($"Erro ao abrir formulário: {ex.Message}");
             }
         }
+
         // --- OPERAÇÕES ---
 
         private async Task BaixarLancamento()
