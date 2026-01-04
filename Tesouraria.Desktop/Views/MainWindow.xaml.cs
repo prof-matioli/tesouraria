@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Windows;
+using Tesouraria.Application.Services;
 using Tesouraria.Desktop.ViewModels;
 
 namespace Tesouraria.Desktop.Views
@@ -37,6 +38,26 @@ namespace Tesouraria.Desktop.Views
             if (result == MessageBoxResult.No)
             {
                 e.Cancel = true; // Cancela o fechamento
+            }
+        }
+
+        // Esse método roda quando o usuário clica no X para fechar
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+
+            // Executa o backup automático antes de fechar totalmente
+            var backupService = new BackupService();
+
+            // Roda em uma Task para não travar visualmente a janela fechando, 
+            // embora a cópia seja tão rápida que nem seria necessário.
+            try
+            {
+                backupService.RealizarBackupAutomatico();
+            }
+            catch
+            {
+                // Silêncio é ouro no encerramento
             }
         }
     }

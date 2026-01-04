@@ -52,6 +52,29 @@ namespace Tesouraria.Desktop
                 // 4. Constrói o provedor
                 ServiceProvider = serviceCollection.BuildServiceProvider();
 
+                // ============================================================
+                // CRIAÇÃO AUTOMÁTICA DO BANCO E TABELAS
+                // ============================================================
+                try
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                        // Este comando cria o arquivo .db se não existir
+                        // E cria todas as tabelas (Perfis, Usuarios, Lancamentos...)
+                        dbContext.Database.Migrate();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erro ao criar banco de dados: {ex.Message}");
+                    // Opcional: Shutdown se o banco for vital
+                    // Current.Shutdown(); 
+                    // return;
+                }
+                // ============================================================
+
                 // 5. Inicialização do Banco de Dados (Seed/Migration)
                 try
                 {
@@ -102,7 +125,8 @@ namespace Tesouraria.Desktop
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer(connectionString);
+                //options.UseSqlServer(connectionString);
+                options.UseSqlite(connectionString);
             }, ServiceLifetime.Transient);
 
             // --- 2. REPOSITÓRIOS ---

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace Tesouraria.Infrastructure.Data
 {
@@ -10,7 +11,9 @@ namespace Tesouraria.Infrastructure.Data
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
             // Coloque aqui a MESMA string de conexão que está no seu App.xaml.cs ou appsettings.json
-            optionsBuilder.UseSqlServer(@"Server=192.168.101.179; Database=Tesouraria; User Id=sa; Password=Senh@Forte; Integrated Security=SSPI;");
+            //optionsBuilder.UseSqlServer(@"Server=192.168.101.179; Database=Tesouraria; User Id=sa; Password=Senh@Forte; Integrated Security=SSPI;");
+            optionsBuilder.UseSqlite("Data Source=tesouraria.db");
+
             optionsBuilder.EnableSensitiveDataLogging(true);
 
             return new AppDbContext(optionsBuilder.Options);

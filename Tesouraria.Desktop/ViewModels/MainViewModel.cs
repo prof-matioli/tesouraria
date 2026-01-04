@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
+using Tesouraria.Application.Services;
 using Tesouraria.Desktop.Core;
 
 namespace Tesouraria.Desktop.ViewModels
@@ -57,6 +58,8 @@ namespace Tesouraria.Desktop.ViewModels
         public ICommand NavegarPlanoContasCommand { get; }
         public ICommand NavegarUsuarioCommand { get; }
 
+        public ICommand FazerBackupCommand { get; }
+
         // Sistema
         //public ICommand SairCommand { get; }
 
@@ -80,6 +83,9 @@ namespace Tesouraria.Desktop.ViewModels
             NavegarPlanoContasCommand = new RelayCommand(_ => NavegarPara<CategoriaFinanceiraListaViewModel>());
             NavegarUsuarioCommand = new RelayCommand(_ => NavegarPara<UsuarioListaViewModel>()); // Assumindo lista, não cadastro direto
 
+            //Backup
+            FazerBackupCommand = new RelayCommand(_ => FazerBackup());
+
             // Sair
             //SairCommand = new RelayCommand(_ => FecharSistema());
 
@@ -88,6 +94,13 @@ namespace Tesouraria.Desktop.ViewModels
 
             // Inicia o sistema já no Dashboard
             NavegarPara<DashboardViewModel>();
+        }
+
+        private void FazerBackup()
+        {
+            // Instancia o serviço (ou injeta via Dependecy Injection se preferir)
+            var backupService = new BackupService();
+            backupService.RealizarBackup();
         }
 
         // --- LÓGICA DE NAVEGAÇÃO (SPA) ---

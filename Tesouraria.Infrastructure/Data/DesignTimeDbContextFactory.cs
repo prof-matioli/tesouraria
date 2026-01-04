@@ -11,9 +11,11 @@ namespace Tesouraria.Infrastructure.Context
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
             // Aqui você define a string explicitamente para as MIGRATIONS
-            var connectionString = "Server=192.168.101.179,1433;Database=Tesouraria;User Id=sa;Password=Senh@Forte;TrustServerCertificate=True;";
+            //var connectionString = "Server=192.168.101.179,1433;Database=Tesouraria;User Id=sa;Password=Senh@Forte;TrustServerCertificate=True;";
+            //optionsBuilder.UseSqlServer(connectionString);
+            
+            optionsBuilder.UseSqlite("Data Source=tesouraria.db");
 
-            optionsBuilder.UseSqlServer(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }
