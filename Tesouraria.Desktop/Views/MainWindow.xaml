@@ -8,6 +8,7 @@
         xmlns:views="clr-namespace:Tesouraria.Desktop.Views"
         xmlns:cad="clr-namespace:Tesouraria.Desktop.Views.Cadastros"
         xmlns:rel="clr-namespace:Tesouraria.Desktop.Views.Relatorios"
+        xmlns:tool="clr-namespace:Tesouraria.Desktop.Views.Ferramentas"
         
         mc:Ignorable="d"
         Title="Tesouraria Paroquial - Painel Principal" 
@@ -46,6 +47,10 @@
 
         <DataTemplate DataType="{x:Type vm:RelatorioViewModel}">
             <rel:RelatorioView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:ImportacaoExtratoViewModel}">
+            <tool:ImportacaoExtratoView />
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vm:UsuarioListaViewModel}">
@@ -134,6 +139,8 @@
                             <TextBlock Text="FINANCEIRO" Style="{StaticResource MenuSectionHeaderStyle}"/>
                             <Button Content="Lançamentos" Tag="💰" Command="{Binding NavegarLancamentosCommand}" Style="{StaticResource MenuButtonStyle}"/>
                             <Button Content="Relatórios" Tag="📊" Command="{Binding NavegarRelatoriosCommand}" Style="{StaticResource MenuButtonStyle}"/>
+
+                            <Button Content="Importar Extrato" Tag="📊" Command="{Binding NavegarImportacaoCommand}" Style="{StaticResource MenuButtonStyle}"/>
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding IsAdministrador, Converter={StaticResource BoolToVis}}">

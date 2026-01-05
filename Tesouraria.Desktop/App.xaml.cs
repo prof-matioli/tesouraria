@@ -9,6 +9,7 @@ using Tesouraria.Desktop.ViewModels;
 using Tesouraria.Desktop.Views;
 using Tesouraria.Desktop.Views.Cadastros;
 using Tesouraria.Desktop.Views.Relatorios;
+using Tesouraria.Desktop.Views.Ferramentas;
 using Tesouraria.Infrastructure.Repositories;
 using Tesouraria.Infrastructure.Data.Repositories;
 using Tesouraria.Application.Mappings;
@@ -143,9 +144,8 @@ namespace Tesouraria.Desktop
             services.AddTransient<ILancamentoService, LancamentoService>();
             services.AddTransient<IUsuarioService, UsuarioService>();
 
-            // [NOVO] SERVIÇO DE RELATÓRIO PDF
-            // Registra o serviço para que a ViewModel possa recebê-lo
             services.AddTransient<RelatorioPdfService>();
+            services.AddTransient<ExtratoService>();
 
             // --- 5. VIEWMODELS ---
             services.AddTransient<LoginViewModel>();
@@ -154,8 +154,8 @@ namespace Tesouraria.Desktop
             services.AddTransient<LancamentoCadastroViewModel>();
             services.AddTransient<DashboardViewModel>();
 
-            // O RelatorioViewModel agora receberá (ILancamentoService, IRepository<CentroCusto>, RelatorioPdfService)
             services.AddTransient<RelatorioViewModel>();
+            services.AddTransient<ImportacaoExtratoViewModel>();
 
             services.AddTransient<FielListaViewModel>();
             services.AddTransient<FielCadastroViewModel>();
@@ -185,6 +185,7 @@ namespace Tesouraria.Desktop
             services.AddTransient<CadastroCategoriaFinanceiraFormWindow>();
             services.AddTransient<UsuarioCadastroView>();
             services.AddTransient<UsuarioListaView>();
+            services.AddTransient<ImportacaoExtratoView>();
         }
     }
 }

@@ -14,24 +14,22 @@ namespace Tesouraria.Desktop.Services
     {
         private readonly IConfiguration _configuration;
 
-        // Injeção de dependência para acessar o appsettings
         public RelatorioPdfService(IConfiguration configuration)
         {
             _configuration = configuration;
         }
+
         public void GerarPdf(IEnumerable<LancamentoDto> dados, FiltroRelatorioDto filtro, string caminhoArquivo)
         {
-            // Ler o nome do arquivo de configuração. Se não achar, usa um valor padrão.
-            var nomeEmpresa = _configuration["ConfiguracoesAplicacao:NomeEmpresa"]
-                              ?? "Minha Empresa";
+            var nomeEmpresa = _configuration["ConfiguracoesAplicacao:NomeEmpresa"] ?? "Minha Empresa";
 
-            // 1. Agrupamento por Centro de Custo (para o detalhamento e primeiro resumo)
+            // 1. Agrupamento por Centro de Custo
             var dadosAgrupadosCC = dados
                 .GroupBy(x => x.CentroCustoNome)
                 .OrderBy(g => g.Key)
                 .ToList();
 
-            // 2. Agrupamento por Categoria (para o novo resumo)
+            // 2. Agrupamento por Categoria
             var dadosAgrupadosCategoria = dados
                 .GroupBy(x => x.CategoriaNome)
                 .OrderBy(g => g.Key)
@@ -57,7 +55,7 @@ namespace Tesouraria.Desktop.Services
                         row.RelativeItem().Column(col =>
                         {
                             col.Item().Text(nomeEmpresa).FontSize(16).SemiBold().FontColor(Colors.Blue.Darken3);
-                            col.Item().Text("Prestação de Contas").FontSize(12);
+                            col.Item().Text("Prestação de Contas (com Saldo Progressivo)").FontSize(12);
                             col.Item().Text($"Período: {filtro.DataInicio:dd/MM/yyyy} a {filtro.DataFim:dd/MM/yyyy}").FontSize(9).Italic();
 
                             var textoFiltro = filtro.CentroCustoId > 0 ? "Filtro: Centro de Custo Específico" : "Visualização: Todos os Centros de Custo";
@@ -75,28 +73,34 @@ namespace Tesouraria.Desktop.Services
                     page.Content().PaddingVertical(10).Column(colunaPrincipal =>
                     {
                         // ====================================================================================
-                        // PARTE 1: TABELA DETALHADA (Agrupada por Centro de Custo)
+                        // PARTE 1: TABELA DETALHADA (Com Saldo Acumulado)
                         // ====================================================================================
                         foreach (var grupo in dadosAgrupadosCC)
                         {
-                            var subtotalReceita = grupo.Where(x => x.Tipo == TipoTransacao.Receita).Sum(x => x.ValorPago ?? x.ValorOriginal);
-                            var subtotalDespesa = grupo.Where(x => x.Tipo == TipoTransacao.Despesa).Sum(x => x.ValorPago ?? x.ValorOriginal);
+                            // Totais do Grupo (para o totalizador final)
+                            var totalReceitaCC = grupo.Where(x => x.Tipo == TipoTransacao.Receita).Sum(x => x.ValorPago ?? x.ValorOriginal);
+                            var totalDespesaCC = grupo.Where(x => x.Tipo == TipoTransacao.Despesa).Sum(x => x.ValorPago ?? x.ValorOriginal);
+                            var saldoFinalCC = totalReceitaCC - totalDespesaCC;
+
+                            // Variável de Saldo Progressivo (Zera a cada Centro de Custo)
+                            decimal saldoAcumulado = 0;
 
                             colunaPrincipal.Item().PaddingBottom(15).Table(table =>
                             {
                                 table.ColumnsDefinition(columns =>
                                 {
-                                    columns.ConstantColumn(40); // Venc.
-                                    columns.ConstantColumn(40); // Pgto.
+                                    columns.ConstantColumn(35); // Venc.
+                                    columns.ConstantColumn(35); // Pgto.
                                     columns.RelativeColumn();   // Descrição
-                                    columns.ConstantColumn(100);// Categoria
-                                    columns.ConstantColumn(65); // Entrada
-                                    columns.ConstantColumn(65); // Saída
+                                    columns.ConstantColumn(90); // Categoria
+                                    columns.ConstantColumn(60); // Entrada
+                                    columns.ConstantColumn(60); // Saída
+                                    columns.ConstantColumn(65); // Saldo
                                 });
 
                                 table.Header(header =>
                                 {
-                                    header.Cell().ColumnSpan(6)
+                                    header.Cell().ColumnSpan(7)
                                         .Background(Colors.Grey.Lighten3)
                                         .Padding(5)
                                         .Text(t =>
@@ -111,12 +115,17 @@ namespace Tesouraria.Desktop.Services
                                     header.Cell().Element(EstiloCabecalhoColuna).Text("Categoria");
                                     header.Cell().Element(EstiloCabecalhoColuna).AlignRight().Text("Entradas");
                                     header.Cell().Element(EstiloCabecalhoColuna).AlignRight().Text("Saídas");
+                                    header.Cell().Element(EstiloCabecalhoColuna).AlignRight().Text("Saldo");
                                 });
 
+                                // --- LINHAS DE DADOS ---
                                 foreach (var item in grupo.OrderBy(x => x.DataVencimento))
                                 {
                                     var valor = item.ValorPago ?? item.ValorOriginal;
                                     var isReceita = item.Tipo == TipoTransacao.Receita;
+
+                                    if (isReceita) saldoAcumulado += valor;
+                                    else saldoAcumulado -= valor;
 
                                     table.Cell().Element(EstiloCelula).Text(item.DataVencimento.ToString("dd/MM"));
                                     table.Cell().Element(EstiloCelula).Text(item.DataPagamento?.ToString("dd/MM") ?? "-").FontColor(Colors.Grey.Darken2);
@@ -128,27 +137,38 @@ namespace Tesouraria.Desktop.Services
                                             c.Item().Text(item.PessoaNome).FontSize(7).FontColor(Colors.Grey.Darken2);
                                     });
 
-                                    table.Cell().Element(EstiloCelula).Text(item.CategoriaNome).FontSize(8);
+                                    table.Cell().Element(EstiloCelula).Text(item.CategoriaNome).FontSize(7);
+
                                     table.Cell().Element(EstiloCelula).AlignRight().Text(isReceita ? valor.ToString("N2") : "-").FontColor(Colors.Green.Darken3);
                                     table.Cell().Element(EstiloCelula).AlignRight().Text(!isReceita ? valor.ToString("N2") : "-").FontColor(Colors.Red.Darken3);
+
+                                    table.Cell().Element(EstiloCelula).AlignRight().Text(saldoAcumulado.ToString("N2"))
+                                        .SemiBold().FontColor(saldoAcumulado >= 0 ? Colors.Blue.Medium : Colors.Red.Medium);
                                 }
 
-                                table.Footer(footer =>
-                                {
-                                    footer.Cell().ColumnSpan(4).AlignRight().PaddingRight(5).PaddingVertical(3).Text("Subtotal do Centro de Custo:").Bold();
-                                    footer.Cell().AlignRight().PaddingVertical(3).Text(subtotalReceita.ToString("N2")).Bold().FontColor(Colors.Green.Darken3);
-                                    footer.Cell().AlignRight().PaddingVertical(3).Text(subtotalDespesa.ToString("N2")).Bold().FontColor(Colors.Red.Darken3);
-                                });
+                                // --- LINHA DE TOTALIZAÇÃO (Aparece apenas uma vez no final) ---
+                                // Substitui o uso de table.Footer() para não repetir em quebras de página
+
+                                table.Cell().ColumnSpan(6)
+                                     .BorderTop(1).BorderColor(Colors.Grey.Medium) // Borda para separar
+                                     .AlignRight().PaddingRight(5).PaddingVertical(6)
+                                     .Text("Saldo Final do Centro de Custo:").Bold();
+
+                                table.Cell()
+                                     .BorderTop(1).BorderColor(Colors.Grey.Medium)
+                                     .AlignRight().PaddingVertical(6)
+                                     .Text(saldoFinalCC.ToString("N2"))
+                                     .ExtraBold().FontSize(10)
+                                     .FontColor(saldoFinalCC >= 0 ? Colors.Blue.Darken2 : Colors.Red.Darken2);
                             });
                         }
 
                         // ====================================================================================
-                        // PARTE 2: RESUMO POR CENTRO DE CUSTO (Nova Página)
+                        // PARTE 2: RESUMO POR CENTRO DE CUSTO
                         // ====================================================================================
                         colunaPrincipal.Item().PageBreak();
-
                         colunaPrincipal.Item().Text("RESUMO POR CENTRO DE CUSTO").FontSize(14).Bold().FontColor(Colors.Blue.Darken3);
-                        colunaPrincipal.Item().PaddingBottom(10).Text("Visão consolidada dos saldos agrupados por centro de custo.").FontSize(10).FontColor(Colors.Grey.Darken1);
+                        colunaPrincipal.Item().PaddingBottom(10).Text("Visão consolidada.").FontSize(10).FontColor(Colors.Grey.Darken1);
 
                         colunaPrincipal.Item().Table(t =>
                         {
@@ -177,27 +197,24 @@ namespace Tesouraria.Desktop.Services
                                 t.Cell().Element(EstiloCelulaResumo).Text(g.Key.ToUpper());
                                 t.Cell().Element(EstiloCelulaResumo).AlignRight().Text(r.ToString("N2"));
                                 t.Cell().Element(EstiloCelulaResumo).AlignRight().Text(d.ToString("N2"));
-                                t.Cell().Element(EstiloCelulaResumo).AlignRight().Text(s.ToString("N2"))
-                                    .FontColor(s >= 0 ? Colors.Blue.Medium : Colors.Red.Medium);
+                                t.Cell().Element(EstiloCelulaResumo).AlignRight().Text(s.ToString("N2")).FontColor(s >= 0 ? Colors.Blue.Medium : Colors.Red.Medium);
                             }
 
-                            t.Footer(f =>
-                            {
-                                f.Cell().Element(EstiloRodapeResumo).Text("TOTAL GERAL");
-                                f.Cell().Element(EstiloRodapeResumo).AlignRight().Text(totalGeralReceitas.ToString("C2"));
-                                f.Cell().Element(EstiloRodapeResumo).AlignRight().Text(totalGeralDespesas.ToString("C2"));
-                                f.Cell().Element(EstiloRodapeResumo).AlignRight().Text(saldoGeral.ToString("C2"))
-                                    .FontColor(saldoGeral >= 0 ? Colors.Blue.Darken2 : Colors.Red.Darken2);
-                            });
+                            // Linha de Total Geral (Movida para o corpo para evitar repetição em quebra de página)
+                            t.Cell().ColumnSpan(4).Element(EstiloRodapeResumo).Padding(0); // Espaçador ou linha divisória se necessário
+
+                            t.Cell().Element(EstiloRodapeResumo).Text("TOTAL GERAL");
+                            t.Cell().Element(EstiloRodapeResumo).AlignRight().Text(totalGeralReceitas.ToString("C2"));
+                            t.Cell().Element(EstiloRodapeResumo).AlignRight().Text(totalGeralDespesas.ToString("C2"));
+                            t.Cell().Element(EstiloRodapeResumo).AlignRight().Text(saldoGeral.ToString("C2")).FontColor(saldoGeral >= 0 ? Colors.Blue.Darken2 : Colors.Red.Darken2);
                         });
 
                         // ====================================================================================
-                        // PARTE 3: RESUMO POR CATEGORIA FINANCEIRA (Nova Página)
+                        // PARTE 3: RESUMO POR CATEGORIA
                         // ====================================================================================
                         colunaPrincipal.Item().PageBreak();
-
-                        colunaPrincipal.Item().Text("RESUMO POR CATEGORIA FINANCEIRA").FontSize(14).Bold().FontColor(Colors.Blue.Darken3);
-                        colunaPrincipal.Item().PaddingBottom(10).Text("Visão consolidada dos saldos agrupados por natureza (categoria).").FontSize(10).FontColor(Colors.Grey.Darken1);
+                        colunaPrincipal.Item().Text("RESUMO POR CATEGORIA").FontSize(14).Bold().FontColor(Colors.Blue.Darken3);
+                        colunaPrincipal.Item().PaddingBottom(10).Text("Visão consolidada por natureza.").FontSize(10).FontColor(Colors.Grey.Darken1);
 
                         colunaPrincipal.Item().Table(t =>
                         {
@@ -226,21 +243,15 @@ namespace Tesouraria.Desktop.Services
                                 t.Cell().Element(EstiloCelulaResumo).Text(g.Key);
                                 t.Cell().Element(EstiloCelulaResumo).AlignRight().Text(r.ToString("N2"));
                                 t.Cell().Element(EstiloCelulaResumo).AlignRight().Text(d.ToString("N2"));
-                                t.Cell().Element(EstiloCelulaResumo).AlignRight().Text(s.ToString("N2"))
-                                    .FontColor(s >= 0 ? Colors.Blue.Medium : Colors.Red.Medium);
+                                t.Cell().Element(EstiloCelulaResumo).AlignRight().Text(s.ToString("N2")).FontColor(s >= 0 ? Colors.Blue.Medium : Colors.Red.Medium);
                             }
 
-                            // O Rodapé (Totais) é o mesmo, pois a soma das categorias deve bater com a soma dos centros de custo
-                            t.Footer(f =>
-                            {
-                                f.Cell().Element(EstiloRodapeResumo).Text("TOTAL GERAL");
-                                f.Cell().Element(EstiloRodapeResumo).AlignRight().Text(totalGeralReceitas.ToString("C2"));
-                                f.Cell().Element(EstiloRodapeResumo).AlignRight().Text(totalGeralDespesas.ToString("C2"));
-                                f.Cell().Element(EstiloRodapeResumo).AlignRight().Text(saldoGeral.ToString("C2"))
-                                    .FontColor(saldoGeral >= 0 ? Colors.Blue.Darken2 : Colors.Red.Darken2);
-                            });
+                            // Linha de Total Geral
+                            t.Cell().Element(EstiloRodapeResumo).Text("TOTAL GERAL");
+                            t.Cell().Element(EstiloRodapeResumo).AlignRight().Text(totalGeralReceitas.ToString("C2"));
+                            t.Cell().Element(EstiloRodapeResumo).AlignRight().Text(totalGeralDespesas.ToString("C2"));
+                            t.Cell().Element(EstiloRodapeResumo).AlignRight().Text(saldoGeral.ToString("C2")).FontColor(saldoGeral >= 0 ? Colors.Blue.Darken2 : Colors.Red.Darken2);
                         });
-
                     });
 
                     // --- RODAPÉ DA PÁGINA ---
@@ -264,7 +275,7 @@ namespace Tesouraria.Desktop.Services
             p.Start();
         }
 
-        // --- HELPERS DE ESTILO (Refatorado para limpar o código principal) ---
+        // --- HELPERS DE ESTILO ---
 
         static IContainer EstiloCabecalhoColuna(IContainer container)
         {
@@ -281,7 +292,6 @@ namespace Tesouraria.Desktop.Services
                             .PaddingVertical(4);
         }
 
-        // Estilos específicos para as tabelas de Resumo
         static IContainer EstiloCabecalhoResumo(IContainer container)
         {
             return container.BorderBottom(2).BorderColor(Colors.Blue.Darken3).Padding(4);

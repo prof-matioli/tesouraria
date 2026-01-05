@@ -59,6 +59,7 @@ namespace Tesouraria.Desktop.ViewModels
         public ICommand NavegarUsuarioCommand { get; }
 
         public ICommand FazerBackupCommand { get; }
+        public ICommand NavegarImportacaoCommand { get; }
 
         // Sistema
         //public ICommand SairCommand { get; }
@@ -85,6 +86,9 @@ namespace Tesouraria.Desktop.ViewModels
 
             //Backup
             FazerBackupCommand = new RelayCommand(_ => FazerBackup());
+            
+            //Importação de extrato bancário
+            NavegarImportacaoCommand = new RelayCommand(_ => NavegarPara<ImportacaoExtratoViewModel>());
 
             // Sair
             //SairCommand = new RelayCommand(_ => FecharSistema());
